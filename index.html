@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Asst4 animation by 462cmu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Asst4 animation</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.com/462cmu/asst4_animation" class="btn">View on GitHub</a>
+      <a href="https://github.com/462cmu/asst4_animation/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/462cmu/asst4_animation/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/Animator.jpg" alt="Animator"></p>
+
+<h3>
+<a id="due-date" class="anchor" href="#due-date" aria-hidden="true"><span class="octicon octicon-link"></span></a>Due Date</h3>
+
+<p>Mon Nov 23rd, 11:59pm</p>
+
+<h3>
+<a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h3>
+
+<p>In this project you will build on your previous work with 2D rasterization to implement an application that allows you to manipulate and animate jointed cartoon characters.  When you are done, you will have a tool that allows you to produce animations that use three of the major techniques used in production computer animation: keyframing, numerical optimization, and physically-based simulation.  (You can create your own SVG characters in free software like <a href="http://https://inkscape.org/en/">Inkscape</a>, or commercial software like <a href="http://www.adobe.com/Illustrator/">Adobe Illustrator</a>; more details are given below about exactly how to construct one of these characters.)</p>
+
+<h3>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting started</h3>
+
+<p>We will be distributing assignments with git. You can find the repository for this assignment at <a href="http://462cmu.github.io/asst4_animator/">http://462cmu.github.io/asst4_animator/</a>. If you are unfamiliar with git, here is what you need to do to get the starter code:</p>
+
+<pre><code>$ git clone https://github.com/462cmu/asst4_animator.git
+</code></pre>
+
+<p>This will create a <i> </i> <em>asst4_animator</em> folder with all the source files. </p>
+
+<h3>
+<a id="build-instructions" class="anchor" href="#build-instructions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build Instructions</h3>
+
+<p>In order to ease the process of running on different platforms, we will be using <a href="http://www.cmake.org" title="CMake Homepage">CMake</a> for our assignments. You will need a CMake installation of version 2.8+ to build the code for this assignment. The GHC 5xxx cluster machines have all the packages required to build the project. It should also be relatively easy to build the assignment and work locally on your OSX or Linux. Building on Windows is currently not supported.</p>
+
+<p>If you are working on OS X and do not have CMake installed, we recommend installing it through <a href="https://www.macports.org/">Macports</a>:</p>
+
+<pre><code>sudo port install cmake
+</code></pre>
+
+<p>Or <a href="http://brew.sh/">Homebrew</a>:</p>
+
+<pre><code>brew install cmake
+</code></pre>
+
+<p>To build your code for this assignment:</p>
+
+<ul>
+<li>Create a directory to build your code:</li>
+</ul>
+
+<pre><code>$ cd asst4_animator &amp;&amp; mkdir build &amp;&amp; cd build
+</code></pre>
+
+<ul>
+<li>Run CMake to generate makefile:</li>
+</ul>
+
+<pre><code>$ cmake ..
+</code></pre>
+
+<ul>
+<li>Build your code:</li>
+</ul>
+
+<pre><code>$ make
+</code></pre>
+
+<ul>
+<li>Install the executable (to asst4_animator/bin):</li>
+</ul>
+
+<pre><code>$ make install
+</code></pre>
+
+<h3>
+<a id="using-the-animator-app" class="anchor" href="#using-the-animator-app" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using the Animator App</h3>
+
+<p>When you have successfully built your code, you will get an executable named <strong>animator</strong>. The <strong>animator</strong> executable takes exactly one argument from the command line, specifying either a single SVG character, or a directory containing multiple characters.  (Every SVG file in the directory must follow the character format, described below.) For example, to load the example file <i> </i><em>scenes/character.svg</em> from your build directory:</p>
+
+<pre><code>./meshedit ../scenes/character.svg
+</code></pre>
+
+<p>Likewise, to load the directory <i> </i><em>scenes/testscene/</em> you can run</p>
+
+<pre><code>./meshedit ../scenes/testscene
+</code></pre>
+
+<p>When you first run the application, you will see a collection of one or more characters, possibly overlapping.  The editor already supports some basic functionality like rotating the joints of characters, which you can do by (left-)clicking and dragging on the joint.  You can also translate the character by (left-)clicking and dragging on its root.  Eventually, you will be able to right-click and drag in order to modify the character configuration via inverse kinematics (IK).  As you move the cursor around the screen, you'll notice that the character joint under the cursor gets highlighted.  Clicking on this joint will display its attributes and current state.</p>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/AnimatorGUIScreenshot.png" alt="Animator GUI"></p>
+
+<p>In this assignment, you will add functionality to the program that allows you to give motion to the characters in a variety of ways.  There will be three basic types of animation:</p>
+
+<ol>
+<li>Keyframed - At each point in time, the user can set the joint angles and translation for each of the characters.  These events are inserted into a spline data structure, that interpolates the values over time.  Your task will be to implement the interpolation routines, which return the interpolated value and its derivatives.</li>
+<li>Inverse Kinematics (IK) - Setting every joint in a character is difficult and time consuming.  In the second part of the assignment you will implement a simple inverse kinematics scheme that allows the character configuration to be modified by dragging a point on the character toward a target point.  Your key tasks will be computing the gradient of the IK energy, and implementing a simple gradient descent scheme to update the joint angles.</li>
+<li>Dynamics - Some of the characters have special "pendulum" joints whose motion will be dictated by physically-based simulation rather than keyframe interpolation.  Your job will be to evaluate the forces and integrate the equations of motion for a swinging pendulum.  Note that the axis of rotation for this pendulum may be driven by the motion of a keyframed joint; these additional forces also need to be accounted for in the dynamics so that, for instance, an image tossed around the scene will exhibit lively dynamics.</li>
+</ol>
+
+<p>The user interface for each of these animation modes is described in the table below.  Notice that currently, nothing happens when the scene is animated - this is because you haven't yet implemented any of these modes of animation!  Unlike the previous assignment, no reference solution is provided.  However, we provide visual debugging feedback that should help determine if your solutions are correct.  We will also provide several examples (images and video) of correct interpolation, IK, and dynamics.</p>
+
+<h3>
+<a id="summary-of-viewer-controls" class="anchor" href="#summary-of-viewer-controls" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary of Viewer Controls</h3>
+
+<p>A table of all the mouse and keyboard controls in the <strong>animator</strong> application is provided below.</p>
+
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th align="center">Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rotate a joint</td>
+<td align="center">(left click and drag on joint)</td>
+</tr>
+<tr>
+<td>Move a character</td>
+<td align="center">(left click and drag on root joint)</td>
+</tr>
+<tr>
+<td>Manipulate a joint via IK</td>
+<td align="center">(right click and drag on a joint)</td>
+</tr>
+<tr>
+<td>Delete current keyframe</td>
+<td align="center"><kbd>BACKSPACE/DELETE</kbd></td>
+</tr>
+<tr>
+<td>Show/hide debugging information</td>
+<td align="center"><kbd>d</kbd></td>
+</tr>
+<tr>
+<td>Save animation to image sequence</td>
+<td align="center"><kbd>s</kbd></td>
+</tr>
+<tr>
+<td>Play the animation</td>
+<td align="center"><kbd>SPACE</kbd></td>
+</tr>
+<tr>
+<td>Step timeline forward by one frame</td>
+<td align="center"><kbd>RIGHT KEY</kbd></td>
+</tr>
+<tr>
+<td>Step timeline forward by ten frames</td>
+<td align="center"><kbd>RIGHT KEY + SHIFT</kbd></td>
+</tr>
+<tr>
+<td>Step timeline back by one frame</td>
+<td align="center"><kbd>LEFT KEY</kbd></td>
+</tr>
+<tr>
+<td>Step timeline back by ten frames</td>
+<td align="center"><kbd>LEFT KEY + SHIFT</kbd></td>
+</tr>
+<tr>
+<td>Move to next keyframe in timeline</td>
+<td align="center"><kbd>RIGHT KEY + ALT</kbd></td>
+</tr>
+<tr>
+<td>Move to next keyframe in timeline</td>
+<td align="center"><kbd>LEFT KEY + ALT</kbd></td>
+</tr>
+<tr>
+<td>Move to beginning of timeline</td>
+<td align="center"><kbd>UP KEY/HOME</kbd></td>
+</tr>
+<tr>
+<td>Move to end of timeline</td>
+<td align="center"><kbd>DOWN KEY/END</kbd></td>
+</tr>
+<tr>
+<td>Make timeline shorter</td>
+<td align="center"><kbd>[</kbd></td>
+</tr>
+<tr>
+<td>Make timeline shorter</td>
+<td align="center"><kbd>]</kbd></td>
+</tr>
+</tbody>
+</table>
+
+<p>The timeline can also be manipulated by clicking on the timeline itself.  Clicking and dragging will "scrub" through the animation; clicking on the buttons will play, pause, loop, etc.</p>
+
+<h3>
+<a id="what-you-need-to-do" class="anchor" href="#what-you-need-to-do" aria-hidden="true"><span class="octicon octicon-link"></span></a>What You Need to Do</h3>
+
+<p>The assignment is divided into three parts:</p>
+
+<ul>
+<li>Keyframe animation</li>
+<li>Inverse kinematics</li>
+<li>Dynamics simulation</li>
+</ul>
+
+<p>As with all of our assignments, this assignment <strong>involves significant implementation effort.</strong> Also, be advised that there are some dependencies, e.g., IK and dynamics both depend on properly-working keyframe interpolation.  Therefore, you are highly advised to compete the interpolation tasks first, and to carefully consider the <strong>correctness</strong> of this code, since it will be used by subsequent tasks.</p>
+
+<h4>
+<a id="getting-acquainted-with-the-starter-code" class="anchor" href="#getting-acquainted-with-the-starter-code" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Acquainted with the Starter Code</h4>
+
+<p>Before you start, here are some basic information on the structure of the starter code.</p>
+
+<p>Your work will be constrained to implementing part of the classes <code>Spline</code>, <code>Joint</code>, and <code>Character</code> in <i> </i> <em>spline.h</em> and <em>character.cpp</em>.  The routines you need to implement will be clearly marked at the top of the file.  You should be able to implement all the necessary routines without adding additional members or methods to the classes.  You can also assume that a character has already been correctly loaded and built from an SVG file; you do not have to worry about malformed input.  (Of course, if you create your own malformed SVG files, you might run into trouble!)</p>
+
+<h4>
+<a id="the-character-and-joint-classes" class="anchor" href="#the-character-and-joint-classes" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Character and Joint classes</h4>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/JointDiagram.jpg" alt="Joint diagram"></p>
+
+<p>The main object you will be working with is a <code>Character</code>, which is a tree-like collection of <code>Joints</code> together with some additional information, such as its position as a function of time.  Each <code>Joint</code> is a node in the tree, which stores pointers to all of its children plus additional information encoding its center of rotation, and rotation angle as a function of time (relative to the parent).  Each joint also has a flag specifying whether its motion should be determined by keyframe interpolation, or by dynamics.</p>
+
+<p>When working with characters, it is very important to understand how its state (positions, rotation centers, and angles) encodes its configuration.  In particular, let x_0(t) denote the translation of the character as a function of time, encoded by the member <code>Character::position</code>.  Let c_i denote the fixed center of rotation for joint i, encoded by the member <code>Character::center</code> (note that this value is <strong>not</strong> the geometric center of the object; it is an arbitrary point that could be anywhere on the object---or even somewhere __off__the object!).  Finally, let theta_i(t) denote the angle of rotation for joint i as a function of time, encoded by either the member <code>Character::angle</code> (for keyframe interpolated joints), or <code>Character::theta</code> (for dynamic joints).  At any given time t, the rotation of joints and translation of characters will move each joint center to a new location p_i, which we will ultimately store in the member <code>Character::currentCenter</code>.  If joint j is the parent of joint i, then the current position of the root can be expressed as</p>
+
+<p>p_0 = c_0 + x_0(t),</p>
+
+<p>and the current position of any (non-root) node i can be expressed as</p>
+
+<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ) + x_0(t),</p>
+
+<p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  Finally, we add the translation of the character itself.  The cumulative rotation can be written explicitly as</p>
+
+<p>Theta_i(t) = sum_k=0^{i-1} theta_k(t).</p>
+
+<p>Consider what happens, for instance, when the root translation and all the angles are zero.  Then we have p_0 = c_0, and hence</p>
+
+<p>p_1 = p_0 + R(0) ( c_1 - c_0 ) = c_0 + c_1 - c_0 = c_1,
+   p_2 = p_1 + R(0) ( c_2 - c_1 ) = c_1 + c_2 - c_1 = c_2,</p>
+
+<p>and so forth.  In other words, we just recover the original joint centers.</p>
+
+<p>In your code, you will not compute these cumulative rotations explicitly, but rather by recursively traversing the tree.  I.e., each joint will compute its transformation relative to its parent, and then pass this updated transformation to all of its children so that they can compute their own transformations.  This kind of hierarchical <em>scene graph</em> is typical in many computer graphics applications (both 2D and 3D).</p>
+
+<p>The <code>Character</code> and <code>Joint</code> classes have some additional members that will help you to compute their motion.  For instance, each joint stores its current transformation and the current transformation of its parent; it also stores values to encode the current angle and angular velocity for dynamical simulation.  You should take a close look at the comments in the header file <code>character.h</code> to get a more detailed understanding of how these classes work.</p>
+
+<h4>
+<a id="task-1-keyframe-interpolation" class="anchor" href="#task-1-keyframe-interpolation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1: Keyframe Interpolation</h4>
+
+<p>As we discussed in class, data points in time can be interpolated by constructing an approximating piecewise polynomial or <em>spline</em>.  In this assignment you will implement a particular kind of spline, called a <em>Catmull-Rom spline</em>.  A Catmull-Rom spline is a piecewise cubic spline defined purely in terms of the points it interpolates.  It is a popular choice in real animation systems, because the animator does not need to define additional data like tangents, etc.  (However, your code may still need to numerically evaluate these tangents after the fact; more on this point later.)  All of the methods relevant to spline interpolation can be found in <code>spline.h</code> with implementations in 'spline.inl'.</p>
+
+<h5>
+<a id="task-1a-hermite-curve-over-the-unit-interval" class="anchor" href="#task-1a-hermite-curve-over-the-unit-interval" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1A: Hermite curve over the unit interval</h5>
+
+<p>Recall that a <strong>cubic polynomial</strong> is a function of the form</p>
+
+<p>p(t) = at^3 + bt^2 + ct + d,</p>
+
+<p>where a, b, c, and d are fixed coefficients.  However, there are many different ways of specifying a cubic polynomial.  In particular, rather than specifying the coefficients directly, we can specify the endpoints and tangents we wish to interpolate.  This construction is called the "Hermite form" of the polynomial.  In particular, the Hermite form is given by</p>
+
+<p>p(t) = h00(t)p0 + h10(t)m0 + h01(t)p1 + h11(t)m1,</p>
+
+<p>where p0,p1 are the endpoint positions, m0,m1 are the endpoint tangents, and hij are the Hermite bases</p>
+
+<p>h00(t) = 2t^3 - 3t^2 + 1
+   h10(t) = t3 - 2t^2 + t
+   h01(t) = -2t^3 + 3t^2
+   h11(t) = t3 - t2</p>
+
+<p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline over defined over the time interval [0,1] given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
+
+<p>Your basic strategy for implementing this routine should be:
+1. Evaluate the time, its square, and its cube.  (For readability, you may want to make a local copy of <code>normalizedTime</code> called simply <code>t</code>.)
+2. Using these values, as well as the position and tangent values, compute the four basis functions h00, h01, h10, and h11 of a cubic polynomial in Hermite form.  Or, if the user has requested the nth derivative, evaluate the nth derivative of each of the bases.
+3. Finally, combine the endpoint and tangent data using the evaluated bases, and return the result.</p>
+
+<p>Notice that this function is <strong>templated</strong> on a type <code>T</code>.  In C++, a templated class can operate on data of a variable type.  In the case of a spline, for instance, we want to be able to interpolate all sorts of data: angles, vectors, colors, etc.  So it wouldn't make sense to rewrite our spline class once for each of these types; instead, we use templates.  In terms of implementation, your code will look no different than if you were operating on a basic type (e.g., doubles).  However, the compiler will complain if you try to interpolate a type for which interpolation doesn't make sense!  For instance, if you tried to interpolate <code>Character</code> objects, the compiler would likely complain that there is no definition for the sum of two characters (via a + operator).  In general, our spline interpolation will only make sense for data that comes from a <em>vector space</em>, since we need to add T values and take scalar multiples.</p>
+
+<h5>
+<a id="task-1b-evaluation-of-a-catmull-rom-spline" class="anchor" href="#task-1b-evaluation-of-a-catmull-rom-spline" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1B: Evaluation of a Catmull-Rom spline</h5>
+
+<p>Using the routine from part 1A, you will now implement the method <code>Spline::evaluate()</code> which evaluates a general Catmull-Rom spline (and possibly one of its derivatives) at the specified time.  Since we now know how to interpolate a pair of endpoints and tangents, the only task remaining is to find the interval closest to the query time, and evaluate its endpoints and tangents.</p>
+
+<p>The basic idea behind Catmull-Rom is that for a given time t, we first find the four closest knots at times</p>
+
+<p>t0 &lt; t1 &lt;= t &lt; t2 &lt; t3.</p>
+
+<p>We then use t1 and t2 as the endpoints of our cubic "piece," and for tangents we use the values</p>
+
+<p>m1 = ( p2 - p0 ) / 2,
+   m2 = ( p3 - p1 ) / 2.</p>
+
+<p>In other words, a reasonable guess for the tangent is given by the difference between neighboring points.  (See the Wikipedia and our course slides for more details.)</p>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/SplineBoundary.jpg" alt="Spline boundary"></p>
+
+<p>This scheme works great if we have two well-defined knots on either side of the query time t.  But what happens if we get a query time near the beginning or end of the spline?  Or what if the spline contains fewer than four knots?  We still have to somehow come up with a reasonable definition for the positions and tangents of the curve at these times.  For this assignment, your Catmull-Rom spline interpolation should satisfy the following properties:</p>
+
+<ul>
+<li>If there are no knots at all in the spline, interpolation should return the default value for the interpolated type.  This value can be computed by simply calling the constructor for the type: <code>T()</code>.  For instance, if the spline is interpolating <code>Vector2D</code> objects, then the default value will be (0,0).</li>
+<li>If there is only one knot in the spline, interpolation should always return the value of that knot (independent of the time).  In other words, we simply have a <em>constant</em> interpolant.  (What, therefore, should we return for the 1st and 2nd derivatives?)</li>
+<li>If the query time is less than or equal to the initial knot, return the initial knot's value. (What do derivatives look like in this region?)</li>
+<li>If the query time is greater than or equal to the final knot, return the final knot's value. (What do derivatives look like in this region?)</li>
+</ul>
+
+<p>Once we have two or more knots, interpolation can be handled using general-purpose code; we no longer have to consider individual cases (two knots, three knots, ...).  In particular, we can adopt the following "mirroring" strategy:</p>
+
+<ul>
+<li>Any query time between the first and last knot will have at least one knot "to the left" (k1) and one "to the right" (k2).</li>
+<li>Suppose we don't have a knot "two to the left" (k0).  Then we will define a "virtual" knot k0 = k1 - (k2-k1).  In other words, we will "mirror" the difference be observe between k1 and k2 to the other side of k1.</li>
+<li>Likewise, if we don't have a knot "two to the left" of t (k3), then we will "mirror" the difference to get a "virtual" knot k3 = k2 + (k2-k1).</li>
+<li>At this point, we have four valid knot values (whether "real" or "virtual"), and can compute our tangents and positions as usual.</li>
+<li>These values are then handed off to our subroutine that computes cubic interpolation over the unit interval.</li>
+</ul>
+
+<p>An important thing to keep in mind is that <code>Spline::cubicSplineUnitInterval()</code> assumes that the time value t is between 0 and 1, whereas the distance between two knots on our Catmull-Rom spline can be arbitrary.  Therefore, when calling this subroutine you will have to normalize t such that it is between 0 and 1, i.e., you will have to divide by the length of the current interval over which you are interpolating.  You should think very carefully about how this normalization affects the value and derivatives computed by the subroutine, in comparison to the values and derivatives we want to return.</p>
+
+<p>Internally, a <code>Spline</code> object stores its data in an STL <code>map</code> that maps knot times to knot values.  A nice thing about an STL <code>map</code> is that it automatically keeps knots in sorted order.  Therefore, we can quickly access the knot <em>closest</em> to a given time using the method <code>map::upper_bound()</code>, which returns an iterator to knot with the smallest time greater than the given query time (you can find out more about this method via online documentation for the Standard Template Library).</p>
+
+<h5>
+<a id="trying-it-out" class="anchor" href="#trying-it-out" aria-hidden="true"><span class="octicon octicon-link"></span></a>Trying it out</h5>
+
+<p>As soon as spline animation is working, you should be able to edit and playback animations in the timeline.  The first thing you should try is translating a character along a spline path by dragging the root node of the character to different locations in the scene at different points in time (the root node is usually something like the character's torso).  (A good example is <code>pencil.svg</code>.)  If position interpolation is working properly, you should see a white curve interpolating the points of translation.  If derivative interpolation is working, you should also see blue arrows visualizing the velocity, and red arrows visualizing the acceleration.  Compare with the example below.</p>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/CatmullRomPencil.jpg" alt="Catmull Rom curve drawn with a pencil"></p>
+
+<p>Now make something fun!</p>
+
+<p><strong>Possible Extra Credit Extensions:</strong> </p>
+
+<ul>
+<li>There are a variety of variants on the Catmull-Rom spline that are used in computer animation such as the <a href="https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline">Centripetal Catmull-Rom spline</a>.  Find and implement different types of spline interpolation that are well-suited to our 2D keyframe animation, and provide some justification for why they should improve the motion or the ease of generating an animation.  Produce animations that demonstrate the pros and cons of the different interpolation schemes.  (Another interesting example are the so-called <a href="http://graphics.pixar.com/library/WigglySplinesA/">wiggly splines</a>.)</li>
+</ul>
+
+<h4>
+<a id="task-2-inverse-kinematics" class="anchor" href="#task-2-inverse-kinematics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 2: Inverse Kinematics</h4>
+
+<p>After playing with spline interpolation a bit, you may have noticed that it takes a lot of work to manipulate characters into the desired pose, especially if they have many joints (check out <code>character.svg</code>, for instance).  In this task you will implement a basic inverse kinematics (IK) solver that optimizes joint angles in order to meet a given target.  In particular, it will try to match a selected point on the character to the current position of the cursor.</p>
+
+<p>Above, we already described how positions in our kinematic chain are determined from the current angles theta_i.  Our IK algorithm will try to adjust these angles so that our character "reaches for" the cursor.  In particular, suppose the user clicks on a point p on joint i, then moves the cursor to a point q on the screen.  We want to minimize the objective</p>
+
+<p>f_0(theta) = | p(theta) - q |^2</p>
+
+<p>with respect to the joint angles theta.  To keep things simple, we're going to adopt the following convention:</p>
+
+<p><em>The source position p is expressed with respect to the original coordinate system of the joint, i.e., before its parent character translation and joint rotations are applied.</em></p>
+
+<p>This way, p(theta) is the position of the source point after transformation by theta (and the character center).  For instance, if p were the joint center, then p(theta) would just be equal to p_i(theta), i.e., the transformed joint center.</p>
+
+<h4>
+<a id="task-2a-evaluate-the-gradient" class="anchor" href="#task-2a-evaluate-the-gradient" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 2A: Evaluate the gradient</h4>
+
+<p>The question now is: what is the derivative of f_0 with respect to one of the angles theta_j?  Of course, we only have to consider angles theta_j "further up the chain" from joint i, because angles below joint i (or angles on other branches of the tree) don't affect the position of the transformed source point.  Suppose, then, that joint j is an ancestor of joint i.  Then the derivative of f_0 with respect to theta_j is given by</p>
+
+<p>&lt; q-p(theta), u/|u|^2 &gt;,</p>
+
+<p>where &lt;.,.&gt; denotes the usual dot product and u is the vector</p>
+
+<p>R(pi/2)( p(theta) - p_j(theta) ),</p>
+
+<p>i.e., we take the difference between the current source point and the current location of the jth joint, rotated by 90 degrees.  (These expressions may be hard to look at on GitHub; we will also provide a PDF version at a later date.)</p>
+
+<p>This formula will be evaluated in the method <code>Joint::calculateAngleGradient()</code> found in the 'character.h' file. This method takes three parameters:</p>
+
+<ul>
+<li>a pointer to the joint i that contains the source point,</li>
+<li>the current position p(theta) of the source point (i.e., the transformed click point), and</li>
+<li>the current position q of the target point (i.e., the mouse cursor).
+It should compute the gradient of f_0 with respect to joint's angle and store it in the member <code>Joint::ikAngleGradient</code>.  It should also recursively evaluate the gradient for all children, i.e., it should call <code>calculateAngleGradient()</code> for each of the "kids."  However, you should be sure <em>not</em> to set an angle gradient for any joint that doesn't affect the source point; the angle gradient for all other joints must be set to zero.  To aid in this process, you can use the boolean return value of <code>Joint::calculateAngleGradient()</code> to help determine whether the current branch is connected to the joint containing the source point.</li>
+</ul>
+
+<p>Once you have implemented this method, you will be able to see a visualization of the angle gradients by right-clicking and dragging on a joint.  For instance, if you load up the example file <code>scenes/testscene/telescope.svg</code>, your implementation should match the gradients visualized below; here the red dot is the initial click point, and the blue dot is the position of the cursor.  However, the configuration of the character should not change (yet).  </p>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/IKGradientTelescope.jpg" alt="IK angle gradients on the telescope"></p>
+
+<h4>
+<a id="task-2b-ski-downhill" class="anchor" href="#task-2b-ski-downhill" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 2B: Ski downhill</h4>
+
+<p>From here, there's not much more to do: we simply need to "ski downhill" (i.e., apply gradient descent) using the gradient we computed in part 2B.  In particular, you will need to implement the method <code>Character::reachForTarget()</code>, which takes three parameters:</p>
+
+<ul>
+<li>a pointer to the joint containing the click point,</li>
+<li>the location of the un-transformed source point (i.e., without the character translation or joint rotations applied),</li>
+<li>the target point (i.e., the location of the cursor), and</li>
+<li>the current animation time.</li>
+</ul>
+
+<p>This method will need to do several things:</p>
+
+<ul>
+<li>First, it needs to call <code>update()</code>, which computes the current configuration of each joint.  (These values are used by your gradient subroutine, therefore they need to be updated for the current animation time.)</li>
+<li>Also, it needs to compute the angle gradient for every joint.  Joints that do not influence the objective should have zero gradient.  <strong>IMPORTANTLY</strong> you must transform the source point into its current configuration before passing it to <code>Joint::calculateGradient()</code>; the joint's current transformation is stored in the member <code>Joint::currentTransformation</code>.</li>
+<li>Finally, it needs to advance the joint angles via gradient descent.  This can be done by iterating over all joints and adding a little bit of the angle derivative to the current angle (forward Euler).</li>
+</ul>
+
+<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of tau = 0.1, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/TelescopeBent.jpg" alt="Telescope under the infuence of IK"></p>
+
+<h4>
+<a id="task-3-secondary-dynamics" class="anchor" href="#task-3-secondary-dynamics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3: Secondary Dynamics</h4>
+
+<p>(Details forthcoming.)</p>
+
+<h4>
+<a id="task-4-get-creative" class="anchor" href="#task-4-get-creative" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 4: Get Creative!</h4>
+
+<p>Now that you have an awesome animation system, make an awesome animation!  You can save your animation to an image sequence by hitting 's' in the viewer, and compress it into a movie using the script in the p4 directory.  In "getting creative," you should also try creating your own characters, either using a program like Inkscape or by just creating your own SVG file by hand (see below for more details).  Have fun!</p>
+
+<h3>
+<a id="grading" class="anchor" href="#grading" aria-hidden="true"><span class="octicon octicon-link"></span></a>Grading</h3>
+
+<p>Your code must run on the GHC 5xxxx cluster machines as we will grade on those machines. Do not wait until the submission deadline to test your code on the cluster machines. Keep in mind that there is no perfect way to run on arbitrary platforms. If you experience trouble building on your computer, while the staff may be able to help, but the GHC 5xxx machines will always work and we recommend you work on them.</p>
+
+<p>Each task will be graded on the basis of correctness, except for Task 7 which will be graded (gently) on effort.  You are not expected to completely reproduce the reference solution vertex-for-vertex as slight differences in implementation strategy or even the order of floating point arithmetic will causes differences, but your solution should not be very far off from the provided input/output pairs.  If you have any questions about whether your implementation is "sufficiently correct", just ask.</p>
+
+<p>The assignment consists of a total of 100 pts. The point breakdown is as follows:</p>
+
+<ul>
+<li>Task 1:  14</li>
+<li>Task 2:  14 </li>
+<li>Task 3:  14</li>
+<li>Task 4:  17</li>
+<li>Task 5:  17</li>
+<li>Task 6:  17</li>
+<li>Task 7:  7</li>
+</ul>
+
+<h3>
+<a id="handin-instructions" class="anchor" href="#handin-instructions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Handin Instructions</h3>
+
+<p>Your handin directory is on AFS under:</p>
+
+<pre><code>/afs/cs/academic/class/15462-f15-users/ANDREWID/asst4/
+</code></pre>
+
+<p>Note that you may need to create the <code>asst4</code> directory yourself. All your files should be placed there. Please make sure you have a directory and are able to write to it well before the deadline; we are not responsible if you wait until 10 minutes before the deadline and run into trouble. Also, you may need to run <code>aklog cs.cmu.edu</code> after you login in order to read from/write to your submission directory.</p>
+
+<p>You should submit all files needed to build your project, this include:</p>
+
+<ul>
+<li>The <code>src</code> folder with all your source files</li>
+</ul>
+
+<p>Please do not include:</p>
+
+<ul>
+<li>The<code>build</code> folder</li>
+<li>Executables</li>
+<li>Any additional binary or intermediate files generated in the build process.</li>
+</ul>
+
+<p>You should include a <code>README</code> file (plaintext or pdf) if you have implemented any of the extra credit features. In your <code>REAME</code> file, clearly indicate which extra credit features you have implemented. You should also briefly state anything that you think the grader should be aware of.</p>
+
+<p>Do not add levels of indirection when submitting. And please use the same arrangement as the handout. We will enter your handin directory, and run:</p>
+
+<pre><code>mkdir build &amp;&amp; cd build &amp;&amp; cmake .. &amp;&amp; make
+</code></pre>
+
+<p>and your code should build correctly. The code must compile and run on the GHC 5xxx cluster machines. Be sure to check to make sure you submit all files and that your code builds correctly.</p>
+
+<h3>
+<a id="friendly-advice-from-your-tas" class="anchor" href="#friendly-advice-from-your-tas" aria-hidden="true"><span class="octicon octicon-link"></span></a>Friendly Advice from your TAs</h3>
+
+<ul>
+<li><p>As always, start early.  There is a lot to implement in this assignment, and no official checkpoint, so don't fall behind!</p></li>
+<li><p>Be careful with memory allocation, as too many or too frequent heap allocations will severely degrade performance.</p></li>
+<li><p>Make sure you have a submission directory that you can write to as soon as possible. Notify course staff if this is not the case.</p></li>
+<li><p>While C has many pitfalls, C++ introduces even more wonderful ways to shoot yourself in the foot. It is generally wise to stay away from as many features as possible, and make sure you fully understand the features you do use.</p></li>
+</ul>
+
+<h3>
+<a id="rigged-character-definitions" class="anchor" href="#rigged-character-definitions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rigged Character Definitions</h3>
+
+<p>Specially-constructed SVG files are used to define used to describe a kinematic chain that is a hierarchical representation of a character.  The <em>grouping</em> and <em>layering</em> of objects is used to determine the hierarchy and dynamic behavior of the character.  In particular:</p>
+
+<ul>
+<li>A <strong>shape</strong> is an elementary SVG shape; currently-supported shapes include: circle, ellipse, rectangle, line segment, polyline, and polygon.</li>
+<li>Each <strong>joint</strong> consists of a single group of <strong>shapes</strong>, where the last shape in the group <em>must</em> be a circle.  This list must be "flat," i.e., it cannot be a group of groups.  The circle specifies the center of rotation for the joint (its radius is ignored).  The fill color of the joint determines its motion type: black for keyframed joints, white for dynamic joints.</li>
+<li>A <strong>character</strong> is a collection of hierarchically grouped <strong>joints</strong>.  The grouping determines a dependency tree among <strong>joints</strong>; in particular, in any group of <strong>joints</strong> the first <strong>joint</strong> is the parent, and all remaining <strong>joints</strong> are children.  All <strong>joints</strong> in a file must ultimately be grouped into a single <strong>character</strong>; there is no support for multiple characters in a single file.</li>
+</ul>
+
+<p><em>Example</em>: Suppose we want to create a character consisting of a shoulder A, an arm B, a hand C, and three fingers x, y, and z.  Each of A, B, C, x, y, and z must be <strong>joints</strong>, i.e., they must each be a <em>flat</em> list of shapes, including a circle at the very end specifying the center of rotation.  For instance, one of the fingers might look like a = (ellipse,ellipse,ellipse,circle), consisting of three finger joints and an axis of rotation.  In this case, the three finger joints would be fixed relative to each other; only the whole finger would be able to rotate.  To construct the <strong>character</strong>, we would then construct the group (x,y,z,C), which attaches the five fingers to the hand C.  We would then put this group into a group ((x,y,z,C),B) attaching the hand to the arm, and finally (((x,y,z,C),B),A) attaching the arm to the shoulder.  Here is the corresponding SVG code; note that comments (beginning with !--) are ignored:</p>
+
+<div class="highlight highlight-text-xml"><pre>&lt;<span class="pl-ent">svg</span>&gt;
+   &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- CHARACTER: jointed arm with fingers --&gt;</span>
+      &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- SHAPE: shoulder (C) --&gt;</span>
+         &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>340<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>50<span class="pl-pds">"</span></span>/&gt;
+         &lt;<span class="pl-ent">circle</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>380<span class="pl-pds">"</span></span> <span class="pl-e">r</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span> <span class="pl-e">fill</span>=<span class="pl-s"><span class="pl-pds">"</span>#000000<span class="pl-pds">"</span></span> /&gt; <span class="pl-c">&lt;!-- center of rotation --&gt;</span>
+      &lt;/<span class="pl-ent">g</span>&gt;
+      &lt;<span class="pl-ent">g</span>&gt;
+         &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- SHAPE: arm (B) --&gt;</span>
+            &lt;<span class="pl-ent">rect</span> <span class="pl-e">x</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">y</span>=<span class="pl-s"><span class="pl-pds">"</span>140<span class="pl-pds">"</span></span> <span class="pl-e">width</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span> <span class="pl-e">height</span>=<span class="pl-s"><span class="pl-pds">"</span>200<span class="pl-pds">"</span></span>/&gt;
+            &lt;<span class="pl-ent">circle</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>340<span class="pl-pds">"</span></span> <span class="pl-e">r</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span> <span class="pl-e">fill</span>=<span class="pl-s"><span class="pl-pds">"</span>#000000<span class="pl-pds">"</span></span> /&gt; <span class="pl-c">&lt;!-- center of rotation --&gt;</span>
+         &lt;/<span class="pl-ent">g</span>&gt;
+         &lt;<span class="pl-ent">g</span>&gt;
+            &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- SHAPE: hand (C) --&gt;</span>
+               &lt;<span class="pl-ent">rect</span> <span class="pl-e">x</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">y</span>=<span class="pl-s"><span class="pl-pds">"</span>60<span class="pl-pds">"</span></span> <span class="pl-e">width</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span> <span class="pl-e">height</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">circle</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>140<span class="pl-pds">"</span></span> <span class="pl-e">r</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span> <span class="pl-e">fill</span>=<span class="pl-s"><span class="pl-pds">"</span>#000000<span class="pl-pds">"</span></span> /&gt; <span class="pl-c">&lt;!-- center of rotation --&gt;</span>
+            &lt;/<span class="pl-ent">g</span>&gt;
+            &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- SHAPE: finger (x) --&gt;</span>
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">circle</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>60<span class="pl-pds">"</span></span> <span class="pl-e">r</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span> <span class="pl-e">fill</span>=<span class="pl-s"><span class="pl-pds">"</span>#000000<span class="pl-pds">"</span></span> /&gt; <span class="pl-c">&lt;!-- center of rotation --&gt;</span>
+            &lt;/<span class="pl-ent">g</span>&gt;
+            &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- SHAPE: finger (y) --&gt;</span>
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">circle</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>60<span class="pl-pds">"</span></span> <span class="pl-e">r</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span> <span class="pl-e">fill</span>=<span class="pl-s"><span class="pl-pds">"</span>#000000<span class="pl-pds">"</span></span> /&gt; <span class="pl-c">&lt;!-- center of rotation --&gt;</span>
+            &lt;/<span class="pl-ent">g</span>&gt;
+            &lt;<span class="pl-ent">g</span>&gt; <span class="pl-c">&lt;!-- SHAPE: finger (z) --&gt;</span>
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">ellipse</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>40<span class="pl-pds">"</span></span> <span class="pl-e">rx</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span> <span class="pl-e">ry</span>=<span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span>/&gt;
+               &lt;<span class="pl-ent">circle</span> <span class="pl-e">cx</span>=<span class="pl-s"><span class="pl-pds">"</span>80<span class="pl-pds">"</span></span> <span class="pl-e">cy</span>=<span class="pl-s"><span class="pl-pds">"</span>60<span class="pl-pds">"</span></span> <span class="pl-e">r</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span> <span class="pl-e">fill</span>=<span class="pl-s"><span class="pl-pds">"</span>#000000<span class="pl-pds">"</span></span> /&gt; <span class="pl-c">&lt;!-- center of rotation --&gt;</span>
+            &lt;/<span class="pl-ent">g</span>&gt;
+         &lt;/<span class="pl-ent">g</span>&gt;
+      &lt;/<span class="pl-ent">g</span>&gt;
+   &lt;/<span class="pl-ent">g</span>&gt;
+&lt;/<span class="pl-ent">svg</span>&gt;</pre></div>
+
+<p>Note that in most SVG editors the topmost shape in the drawing is saved as the last element in the SVG group.  In general one must be very careful that each joint cointains a circle as its last (topmost) element, and that grouping and layering are done in the proper order.  A good way to "debug" a character file is to try out small pieces of the character joint by joint.</p>
+
+<h3>
+<a id="using-p1-rasterization-routines" class="anchor" href="#using-p1-rasterization-routines" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using p1 Rasterization Routines.</h3>
+
+<p>Those so inclined are welcome to try replacing the opengl rasterization calls in 'hardware_renderer.cpp' with their own software implementations, much like the those implemented in project 1.</p>
+
+<h3>
+<a id="resources-and-notes" class="anchor" href="#resources-and-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Resources and Notes</h3>
+
+<ul>
+<li><a href="https://github.com/Bryce-Summers/Writings/blob/master/Programming%20Guides/C_plus_plus_guide.pdf">Bryce's C++ Programming Guide</a></li>
+</ul>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/462cmu/asst4_animation">Asst4 animation</a> is maintained by <a href="https://github.com/462cmu">462cmu</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
