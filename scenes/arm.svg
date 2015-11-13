@@ -1,0 +1,38 @@
+<svg>
+   <g> <!-- CHARACTER: jointed arm with fingers -->
+      <g> <!-- SHAPE: shoulder (C) -->
+         <ellipse cx="40" cy="340" rx="40" ry="50"/>
+         <circle cx="40" cy="380" r="1" fill="#000000" /> <!-- center of rotation -->
+      </g>
+      <g>
+         <g> <!-- SHAPE: arm (B) -->
+            <rect x="0" y="140" width="80" height="200"/>
+            <circle cx="40" cy="340" r="1" fill="#000000" /> <!-- center of rotation -->
+         </g>
+         <g>
+            <g> <!-- SHAPE: hand (C) -->
+               <rect x="0" y="60" width="80" height="80"/>
+               <circle cx="40" cy="140" r="1" fill="#000000" /> <!-- center of rotation -->
+            </g>
+            <g> <!-- SHAPE: finger (x) -->
+               <ellipse cx="0" cy="0" rx="5" ry="20"/>
+               <ellipse cx="0" cy="20" rx="5" ry="20"/>
+               <ellipse cx="0" cy="40" rx="5" ry="20"/>
+               <circle cx="0" cy="60" r="1" fill="#000000" /> <!-- center of rotation -->
+            </g>
+            <g> <!-- SHAPE: finger (y) -->
+               <ellipse cx="40" cy="0" rx="5" ry="20"/>
+               <ellipse cx="40" cy="20" rx="5" ry="20"/>
+               <ellipse cx="40" cy="40" rx="5" ry="20"/>
+               <circle cx="40" cy="60" r="1" fill="#000000" /> <!-- center of rotation -->
+            </g>
+            <g> <!-- SHAPE: finger (z) -->
+               <ellipse cx="80" cy="0" rx="5" ry="20"/>
+               <ellipse cx="80" cy="20" rx="5" ry="20"/>
+               <ellipse cx="80" cy="40" rx="5" ry="20"/>
+               <circle cx="80" cy="60" r="1" fill="#000000" /> <!-- center of rotation -->
+            </g>
+         </g>
+      </g>
+   </g>
+</svg>
