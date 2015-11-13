@@ -99,7 +99,7 @@
 <pre><code>./meshedit ../scenes/testscene
 </code></pre>
 
-<p>When you first run the application, you will see a collection of one or more characters, possibly overlapping.  The editor already supports some basic functionality like rotating the joints of characters, which you can do by (left-)clicking and dragging on the joint.  You can also translate the character by (left-)clicking and dragging on its root.  Eventually, you will be able to right-click and drag in order to modify the character configuration via inverse kinematics (IK).  As you move the cursor around the screen, you'll notice that the character joint under the cursor gets highlighted.  Clicking on this joint will display its attributes and current state.</p>
+<p>When you first run the application, you will see a collection of one or more characters, possibly overlapping.  As you move the cursor around the screen, you'll notice that the character joint under the cursor gets highlighted.  Clicking on this joint will display its attributes and current state.  As you implement more features, you will be able to manipulate the character by clicking and dragging on its joints.</p>
 
 <p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/AnimatorGUIScreenshot.png" alt="Animator GUI"></p>
 
@@ -232,9 +232,9 @@
 
 <p>and the current position of any (non-root) node i can be expressed as</p>
 
-<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ) + x_0(t),</p>
+<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ),</p>
 
-<p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  Finally, we add the translation of the character itself.  The cumulative rotation can be written explicitly as</p>
+<p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  The cumulative rotation can be written explicitly as</p>
 
 <p>Theta_i(t) = sum_k=0^{i-1} theta_k(t).</p>
 
@@ -402,10 +402,59 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 
 <p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/TelescopeBent.jpg" alt="Telescope under the infuence of IK"></p>
 
+<p><strong>Possible Extra Credit Extensions:</strong> </p>
+
+<ul>
+<li><p>As noted above, we pick our gradient descent time step in an extremely naive way: just a small constant that remains the same independent of what kind of character we're animating, and how big our displacements are.  In general, picking a fixed time step for gradient descent is a recipe for disaster!  Implement a more intelligent <a href="https://en.wikipedia.org/wiki/Line_search">line search</a> strategy that takes the value of the objective and the gradient into account when picking the time step.  Simple but effective strategies include <a href="https://en.wikipedia.org/wiki/Backtracking_line_search">backtracking line search</a>, <a href="https://en.wikipedia.org/wiki/Wolfe_conditions">Armijo-Wolfe</a>, and <a href="https://en.wikipedia.org/wiki/Golden_section_search">golden section search</a>.</p></li>
+<li><p>In class, we also discussed the fact that first-order methods like gradient descent can be extremely slow to converge whenever the energy landscape looks like a "long slender valley."  Implement a second-order descent strategy to speed up convergence of your IK solver.  Note, however, that since the objective is nonconvex, naive Newton descent will <em>not</em> work (why?).  Instead, you will likely want to use a <a href="https://en.wikipedia.org/wiki/Quasi-Newton_method">quasi-Newton</a> method; one that is very popular in graphics (and quite effective in practice) is <a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS">L-BFGS</a>, which can be nicely computed using only the function values and gradients (i.e., no Hessian is needed).  Likewise, the <a href="https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm">Gauss-Newton method</a> requires only the gradient values, and is well suited to objectives that are sums of squares (like our IK "closeness" objective).</p></li>
+<li><p>The IK algorithm you've implemented in this assignment is only one of many possible methods (closely related to the "Jacobian transpose" method)—other possibilities include <a href="http://graphics.cs.cmu.edu/nsp/course/15464-s15/www/assignments/miniProject1.htm">"Jacobian inverse" and "cyclic coordinate descent"</a>, as well as <a href="http://www.andreasaristidou.com/FABRIK.html">"Forward and Backward Reaching IK (FABRIK)"</a>.  Implement one of these methods (or any other IK method) and compare and contrast with our simple gradient descent scheme.  What are the advantages and disadvantages of each method?  Which methods are best suited to our 2D animation problem?  What new kinds of animation might you enable by incorporating different IK schemes?</p></li>
+</ul>
+
 <h4>
 <a id="task-3-secondary-dynamics" class="anchor" href="#task-3-secondary-dynamics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3: Secondary Dynamics</h4>
 
-<p>(Details forthcoming.)</p>
+<p>In the final part of your assignment, you will add additional "secondary" motion to your animations, coming from physically-based dynamics.  In particular, you will implement support for special joints whose motion is determined by the dynamics of a swinging pendulum.  This motion can be used to animate things like a swinging pendulum on a clock, or cartoony motion for things like feathers on a bird, scales on a lizard, leaves on a tree, and other little pieces of flair (get creative!).  The nice thing about physically-based motion is that it comes at "no extra cost" in the sense that an animator using our system will gets additional richness and complexity without specifying anything beyond the existing keyframe animation.  However, it will take additional work on your part to implement the dynamics (and additional computational work at run time to perform the numerical integration).</p>
+
+<h5>
+<a id="task-3a-a-basic-swinging-pendulum" class="anchor" href="#task-3a-a-basic-swinging-pendulum" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3A: A basic swinging pendulum</h5>
+
+<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockNoDamping.jpg" alt="Animator"></p>
+
+<p>To get us started, we will implement a basic swinging pendulum that does <em>not</em> respond to the acceleration of the character it is attached to.  To do so, we simply need to implement the equations of motion for a <em>compound pendulum</em> (i.e., a pendulum consisting of a single rigid body rotating around some axis):</p>
+
+<p>d^2 theta/dt^2 = -m g L sin(theta) / I.</p>
+
+<p>Here theta is the angle with the vertical, m is the mass, g is the acceleration due to gravity, L is distance between the axis of rotation and the center of mass, and I is the moment of inertia.  As we also discussed in class, this second-order (in time) ODE can be split into a system of two first-order ODEs:</p>
+
+<p>d theta / dt = omega
+   d omega / dt = -m g L sin(theta) / I.</p>
+
+<p>It is these equations you will integrate numerically.  In our code framework, the angle theta is stored as the member <code>Joint::theta</code>, and the angular velocity omega is stored as the member <code>Joint::omega</code>.  You will need to implement the method <code>Joint::integrate()</code>, which takes three parameters:</p>
+
+<ul>
+<li>the curent time,</li>
+<li>the time step requested by the user, and</li>
+<li>the cumulative acceleration of any joints "above" the current joint.
+For this task you should only need the second parameter (i.e., the time step).  In particular, you should integrate the equations of motion using the <a href="https://en.wikipedia.org/wiki/Semi-implicit_Euler_method#The_method">symplectic Euler method</a>, which yields good energy behavior (no blowup or damping) and does not require the use of temporary variables.</li>
+</ul>
+
+<p>The physical attributes m, L, and I of the pendulum can be computed using the method <code>Joint::physicalQuantities()</code>, which will return the mass, moment of inertia, and center of mass (these properties are computed from the shape of the joint as described by the SVG file; you can take a look at the file <code>svg.cpp</code> if you're interested in how they're computed).  The length L is the distance between the joint center c and the center of mass C, i.e.,</p>
+
+<pre><code>L = | C - c |.
+</code></pre>
+
+<p>When computing this quantity, you should be careful to use the un-transformed joint center <code>Joint::center</code> rather than the transformed center <code>Joint::currentCenter</code>, since the center of mass C is also expressed in pre-transformed coordinates.  For the gravitational acceleration g you can use any constant that gives reasonable animation; the scales of objects in our SVG files (being cartoons) do not relate to any typical physical scale.  The reference implementation uses the value g = 3.</p>
+
+<p>The only remaining thing you have to do to get your dynamics working is to call your integration routine starting at the root of the character.  This can be done by implementing the method <code>Character::integrate()</code>, which should call <code>integrate()</code> on the member <code>root</code>.  Note that <code>Joint::integrate()</code> asks for three parameters: the current time, the integration time step, and the body acceleration.  For the time being you can just pass in a zero vector for the acceleration; this vector will be worked out in Task 3B.</p>
+
+<p>Once everything has been implemented, try animating the pendulum in <code>clock.svg</code>.  It should swing back and forth indefinitely, without ever blowing up or dying down.  <a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockNoDamping.mov">Click here for an example movie.</a></p>
+
+<p>In the real world, objects do eventually stop moving due to friction and other dissipative forces.  The nice thing about starting with an integrator that preserves energy is that it gives us precise control over exactly how much energy is lost each time step.  In particular, suppose we take a time step of size tau.  Then we can damp our angular velcoity omega by simply multiplying it by exp( -a tau ), where a is a positive constant; in the reference implementation we just use a=1.  (By the way, why is this the damping factor?  Well, if the instantaneous damping factor were a, then the ODE describing the damping would be the simple linear equation du/dt = -au, whose solution is u(t) = exp( -at ) u(0).)  After damping, your clock pendulum should gradually slow down; <a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockDamped.mov">click here for an example movie.</a></p>
+
+<h5>
+<a id="task-3b" class="anchor" href="#task-3b" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3B:</h5>
+
+<p>Details forthcoming</p>
 
 <h4>
 <a id="task-4-get-creative" class="anchor" href="#task-4-get-creative" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 4: Get Creative!</h4>
