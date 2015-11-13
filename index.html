@@ -24,7 +24,7 @@
 <h3>
 <a id="due-date" class="anchor" href="#due-date" aria-hidden="true"><span class="octicon octicon-link"></span></a>Due Date</h3>
 
-<p>Mon Nov 23rd, 11:59pm</p>
+<p>Mon Nov 24th, 11:59pm</p>
 
 <h3>
 <a id="overview" class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h3>
@@ -99,7 +99,7 @@
 <pre><code>./meshedit ../scenes/testscene
 </code></pre>
 
-<p>When you first run the application, you will see a collection of one or more characters, possibly overlapping.  The editor already supports some basic functionality like rotating the joints of characters, which you can do by (left-)clicking and dragging on the joint.  You can also translate the character by (left-)clicking and dragging on its root.  Eventually, you will be able to right-click and drag in order to modify the character configuration via inverse kinematics (IK).  As you move the cursor around the screen, you'll notice that the character joint under the cursor gets highlighted.  Clicking on this joint will display its attributes and current state.</p>
+<p>When you first run the application, you will see a collection of one or more characters, possibly overlapping.  As you move the cursor around the screen, you'll notice that the character joint under the cursor gets highlighted.  Clicking on this joint will display its attributes and current state.  As you implement more features, you will be able to manipulate the character by clicking and dragging on its joints.</p>
 
 <p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/AnimatorGUIScreenshot.png" alt="Animator GUI"></p>
 
@@ -232,9 +232,9 @@
 
 <p>and the current position of any (non-root) node i can be expressed as</p>
 
-<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ) + x_0(t),</p>
+<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ),</p>
 
-<p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  Finally, we add the translation of the character itself.  The cumulative rotation can be written explicitly as</p>
+<p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  The cumulative rotation can be written explicitly as</p>
 
 <p>Theta_i(t) = sum_k=0^{i-1} theta_k(t).</p>
 
