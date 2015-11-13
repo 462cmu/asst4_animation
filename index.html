@@ -228,20 +228,20 @@
 
 <p>When working with characters, it is very important to understand how its state (positions, rotation centers, and angles) encodes its configuration.  In particular, let x_0(t) denote the translation of the character as a function of time, encoded by the member <code>Character::position</code>.  Let c_i denote the fixed center of rotation for joint i, encoded by the member <code>Character::center</code> (note that this value is <strong>not</strong> the geometric center of the object; it is an arbitrary point that could be anywhere on the object---or even somewhere __off__the object!).  Finally, let theta_i(t) denote the angle of rotation for joint i as a function of time, encoded by either the member <code>Character::angle</code> (for keyframe interpolated joints), or <code>Character::theta</code> (for dynamic joints).  At any given time t, the rotation of joints and translation of characters will move each joint center to a new location p_i, which we will ultimately store in the member <code>Character::currentCenter</code>.  If joint j is the parent of joint i, then the current position of the root can be expressed as</p>
 
-<p>p_0 = c_0 + x_0(t),</p>
+<p>$$p_0 = c_0 + x_0(t)$$</p>
 
 <p>and the current position of any (non-root) node i can be expressed as</p>
 
-<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ),</p>
+<p>$$p_i = p_j + R(Theta_i(t)) ( c_i - c_j )$$</p>
 
 <p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  The cumulative rotation can be written explicitly as</p>
 
-<p>Theta_i(t) = sum_k=0^{i-1} theta_k(t).</p>
+<p>$$Theta_i(t) = sum_k=0^{i-1} theta_k(t)$$</p>
 
 <p>Consider what happens, for instance, when the root translation and all the angles are zero.  Then we have p_0 = c_0, and hence</p>
 
-<p>p_1 = p_0 + R(0) ( c_1 - c_0 ) = c_0 + c_1 - c_0 = c_1,
-   p_2 = p_1 + R(0) ( c_2 - c_1 ) = c_1 + c_2 - c_1 = c_2,</p>
+<p>$$p_1 = p_0 + R(0) ( c_1 - c_0 ) = c_0 + c_1 - c_0 = c_1$$
+  $$p_2 = p_1 + R(0) ( c_2 - c_1 ) = c_1 + c_2 - c_1 = c_2$$</p>
 
 <p>and so forth.  In other words, we just recover the original joint centers.</p>
 
@@ -259,18 +259,18 @@
 
 <p>Recall that a <strong>cubic polynomial</strong> is a function of the form</p>
 
-<p>p(t) = at^3 + bt^2 + ct + d,</p>
+<p>$$p(t) = at^3 + bt^2 + ct + d$$</p>
 
 <p>where a, b, c, and d are fixed coefficients.  However, there are many different ways of specifying a cubic polynomial.  In particular, rather than specifying the coefficients directly, we can specify the endpoints and tangents we wish to interpolate.  This construction is called the "Hermite form" of the polynomial.  In particular, the Hermite form is given by</p>
 
-<p>p(t) = h00(t)p0 + h10(t)m0 + h01(t)p1 + h11(t)m1,</p>
+<p>$$p(t) = h_{00}(t)p_0 + h_{10}(t)m_0 + h_{01}(t)p_1 + h_{11}(t)m_1$$</p>
 
 <p>where p0,p1 are the endpoint positions, m0,m1 are the endpoint tangents, and hij are the Hermite bases</p>
 
-<p>h00(t) = 2t^3 - 3t^2 + 1
-   h10(t) = t3 - 2t^2 + t
-   h01(t) = -2t^3 + 3t^2
-   h11(t) = t3 - t2</p>
+<p>$$h_{00}(t) = 2t^3 - 3t^2 + 1$$
+   $$h_{10}(t) = t3 - 2t^2 + t$$
+   $$h_{01}(t) = -2t^3 + 3t^2$$
+   $$h_{11}(t) = t3 - t2$$</p>
 
 <p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline over defined over the time interval [0,1] given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
 
@@ -288,12 +288,12 @@
 
 <p>The basic idea behind Catmull-Rom is that for a given time t, we first find the four closest knots at times</p>
 
-<p>t0 &lt; t1 &lt;= t &lt; t2 &lt; t3.</p>
+<p>$$t0 &lt; t1 &lt;= t &lt; t2 &lt; t3$$</p>
 
 <p>We then use t1 and t2 as the endpoints of our cubic "piece," and for tangents we use the values</p>
 
-<p>m1 = ( p2 - p0 ) / 2,
-   m2 = ( p3 - p1 ) / 2.</p>
+<p>$$m1 = ( p2 - p0 ) / 2$$
+   $$m2 = ( p3 - p1 ) / 2$$</p>
 
 <p>In other words, a reasonable guess for the tangent is given by the difference between neighboring points.  (See the Wikipedia and our course slides for more details.)</p>
 
@@ -344,7 +344,7 @@
 
 <p>Above, we already described how positions in our kinematic chain are determined from the current angles theta_i.  Our IK algorithm will try to adjust these angles so that our character "reaches for" the cursor.  In particular, suppose the user clicks on a point p on joint i, then moves the cursor to a point q on the screen.  We want to minimize the objective</p>
 
-<p>f_0(theta) = | p(theta) - q |^2</p>
+<p>$$f_0(theta) = | p(theta) - q |^2$$</p>
 
 <p>with respect to the joint angles theta.  To keep things simple, we're going to adopt the following convention:</p>
 
@@ -357,11 +357,13 @@
 
 <p>The question now is: what is the derivative of f_0 with respect to one of the angles theta_j?  Of course, we only have to consider angles theta_j "further up the chain" from joint i, because angles below joint i (or angles on other branches of the tree) don't affect the position of the transformed source point.  Suppose, then, that joint j is an ancestor of joint i.  Then the derivative of f_0 with respect to theta_j is given by</p>
 
-<p>&lt; q-p(theta), u/|u|^2 &gt;,</p>
+<pre><code>  &lt; q-p(theta), u/|u|^2 &gt;
+</code></pre>
 
 <p>where &lt;.,.&gt; denotes the usual dot product and u is the vector</p>
 
-<p>R(pi/2)( p(theta) - p_j(theta) ),</p>
+<pre><code>   R(pi/2)( p(theta) - p_j(theta) )
+</code></pre>
 
 <p>i.e., we take the difference between the current source point and the current location of the jth joint, rotated by 90 degrees.  (These expressions may be hard to look at on GitHub; we will also provide a PDF version at a later date.)</p>
 
