@@ -432,8 +432,9 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 
 <p>Here theta is the angle with the vertical, m is the mass, g is the acceleration due to gravity, L is distance between the axis of rotation and the center of mass, and I is the moment of inertia.  As we also discussed in class, this second-order (in time) ODE can be split into a system of two first-order ODEs:</p>
 
-<p>d theta / dt = omega
-   d omega / dt = -m g L sin(theta) / I.</p>
+<p>d theta / dt = omega</p>
+
+<p>d omega / dt = -m g L sin(theta) / I.</p>
 
 <p>It is these equations you will integrate numerically.  In our code framework, the angle theta is stored as the member <code>Joint::theta</code>, and the angular velocity omega is stored as the member <code>Joint::omega</code>.  You will need to implement the method <code>Joint::integrate()</code>, which takes three parameters:</p>
 
