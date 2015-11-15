@@ -275,14 +275,17 @@
 
 <p>h11(t) = t3 - t2</p>
 
-<p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline over defined over the time interval [0,1] given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
+<p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline defined over the time interval [0,1] given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
 
-<p>Your basic strategy for implementing this routine should be:
-1. Evaluate the time, its square, and its cube.  (For readability, you may want to make a local copy of <code>normalizedTime</code> called simply <code>t</code>.)
-2. Using these values, as well as the position and tangent values, compute the four basis functions h00, h01, h10, and h11 of a cubic polynomial in Hermite form.  Or, if the user has requested the nth derivative, evaluate the nth derivative of each of the bases.
-3. Finally, combine the endpoint and tangent data using the evaluated bases, and return the result.</p>
+<p>Your basic strategy for implementing this routine should be:</p>
 
-<p>Notice that this function is <strong>templated</strong> on a type <code>T</code>.  In C++, a templated class can operate on data of a variable type.  In the case of a spline, for instance, we want to be able to interpolate all sorts of data: angles, vectors, colors, etc.  So it wouldn't make sense to rewrite our spline class once for each of these types; instead, we use templates.  In terms of implementation, your code will look no different than if you were operating on a basic type (e.g., doubles).  However, the compiler will complain if you try to interpolate a type for which interpolation doesn't make sense!  For instance, if you tried to interpolate <code>Character</code> objects, the compiler would likely complain that there is no definition for the sum of two characters (via a + operator).  In general, our spline interpolation will only make sense for data that comes from a <em>vector space</em>, since we need to add T values and take scalar multiples.</p>
+<ol>
+<li><p>Evaluate the time, its square, and its cube.  (For readability, you may want to make a local copy of <code>normalizedTime</code> called simply <code>t</code>.)</p></li>
+<li><p>Using these values, as well as the position and tangent values, compute the four basis functions h00, h01, h10, and h11 of a cubic polynomial in Hermite form.  Or, if the user has requested the nth derivative, evaluate the nth derivative of each of the bases.</p></li>
+<li><p>Finally, combine the endpoint and tangent data using the evaluated bases, and return the result.</p></li>
+</ol>
+
+<p>Notice that this function is <strong>templated</strong> on a type <code>T</code>.  In C++, a templated class can operate on data of a variable type.  In the case of a spline, for instance, we want to be able to interpolate all sorts of data: angles, vectors, colors, etc.  So it wouldn't make sense to rewrite our spline class once for each of these types; instead, we use templates.  In terms of implementation, your code will look no different than if you were operating on a basic type (e.g., doubles).  However, the compiler will complain if you try to interpolate a type for which interpolation doesn't make sense!  For instance, if you tried to interpolate <code>Character</code> objects, the compiler would likely complain that there is no definition for the sum of two characters (via a + operator).  In general, our spline interpolation will only make sense for data that comes from a <em>vector space</em>, since we need to add <code>T</code> values and take scalar multiples.</p>
 
 <h5>
 <a id="task-1b-evaluation-of-a-catmull-rom-spline" class="anchor" href="#task-1b-evaluation-of-a-catmull-rom-spline" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1B: Evaluation of a Catmull-Rom spline</h5>
