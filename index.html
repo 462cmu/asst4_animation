@@ -252,7 +252,7 @@
 <h4>
 <a id="task-1-keyframe-interpolation" class="anchor" href="#task-1-keyframe-interpolation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1: Keyframe Interpolation</h4>
 
-<p>As we discussed in class, data points in time can be interpolated by constructing an approximating piecewise polynomial or <em>spline</em>.  In this assignment you will implement a particular kind of spline, called a <em>Catmull-Rom spline</em>.  A Catmull-Rom spline is a piecewise cubic spline defined purely in terms of the points it interpolates.  It is a popular choice in real animation systems, because the animator does not need to define additional data like tangents, etc.  (However, your code may still need to numerically evaluate these tangents after the fact; more on this point later.)  All of the methods relevant to spline interpolation can be found in <code>spline.h</code> with implementations in 'spline.inl'.</p>
+<p>As we discussed in class, data points in time can be interpolated by constructing an approximating piecewise polynomial or <em>spline</em>.  In this assignment you will implement a particular kind of spline, called a <em>Catmull-Rom spline</em>.  A Catmull-Rom spline is a piecewise cubic spline defined purely in terms of the points it interpolates.  It is a popular choice in real animation systems, because the animator does not need to define additional data like tangents, etc.  (However, your code may still need to numerically evaluate these tangents after the fact; more on this point later.)  All of the methods relevant to spline interpolation can be found in <code>spline.h</code> with implementations in <code>spline.inl</code>.</p>
 
 <h5>
 <a id="task-1a-hermite-curve-over-the-unit-interval" class="anchor" href="#task-1a-hermite-curve-over-the-unit-interval" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1A: Hermite curve over the unit interval</h5>
@@ -267,10 +267,13 @@
 
 <p>where p0,p1 are the endpoint positions, m0,m1 are the endpoint tangents, and hij are the Hermite bases</p>
 
-<p>h00(t) = 2t^3 - 3t^2 + 1
-   h10(t) = t3 - 2t^2 + t
-   h01(t) = -2t^3 + 3t^2
-   h11(t) = t3 - t2</p>
+<p>h00(t) = 2t^3 - 3t^2 + 1</p>
+
+<p>h10(t) = t3 - 2t^2 + t</p>
+
+<p>h01(t) = -2t^3 + 3t^2</p>
+
+<p>h11(t) = t3 - t2</p>
 
 <p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline over defined over the time interval [0,1] given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
 
