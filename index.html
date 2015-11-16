@@ -298,8 +298,8 @@
 
 <p>We then use t1 and t2 as the endpoints of our cubic "piece," and for tangents we use the values</p>
 
-<p>m1 = ( p2 - p0 ) / 2,
-   m2 = ( p3 - p1 ) / 2.</p>
+<p>m1 = ( p2 - p0 ) / (t2 - t0),
+   m2 = ( p3 - p1 ) / (t3 - t1).</p>
 
 <p>In other words, a reasonable guess for the tangent is given by the difference between neighboring points.  (See the Wikipedia and our course slides for more details.)</p>
 
@@ -441,9 +441,10 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 <ul>
 <li>the curent time,</li>
 <li>the time step requested by the user, and</li>
-<li>the cumulative acceleration of any joints "above" the current joint.
-For this task you should only need the second parameter (i.e., the time step).  In particular, you should integrate the equations of motion using the <a href="https://en.wikipedia.org/wiki/Semi-implicit_Euler_method#The_method">symplectic Euler method</a>, which yields good energy behavior (no blowup or damping) and does not require the use of temporary variables.</li>
+<li>the cumulative acceleration of any joints "above" the current joint.</li>
 </ul>
+
+<p>For this task you should only need the second parameter (i.e., the time step).  In particular, you should integrate the equations of motion using the <a href="https://en.wikipedia.org/wiki/Semi-implicit_Euler_method#The_method">symplectic Euler method</a>, which yields good energy behavior (no blowup or damping) and does not require the use of temporary variables.</p>
 
 <p>The physical attributes m, L, and I of the pendulum can be computed using the method <code>Joint::physicalQuantities()</code>, which will return the mass, moment of inertia, and center of mass (these properties are computed from the shape of the joint as described by the SVG file; you can take a look at the file <code>svg.cpp</code> if you're interested in how they're computed).  The length L is the distance between the joint center c and the center of mass C, i.e.,</p>
 
