@@ -413,6 +413,7 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 <ul>
 <li><p>As noted above, we pick our gradient descent time step in an extremely naive way: just a small constant that remains the same independent of what kind of character we're animating, and how big our displacements are.  In general, picking a fixed time step for gradient descent is a recipe for disaster!  Implement a more intelligent <a href="https://en.wikipedia.org/wiki/Line_search">line search</a> strategy that takes the value of the objective and the gradient into account when picking the time step.  Simple but effective strategies include <a href="https://en.wikipedia.org/wiki/Backtracking_line_search">backtracking line search</a>, <a href="https://en.wikipedia.org/wiki/Wolfe_conditions">Armijo-Wolfe</a>, and <a href="https://en.wikipedia.org/wiki/Golden_section_search">golden section search</a>.</p></li>
 <li><p>In class, we also discussed the fact that first-order methods like gradient descent can be extremely slow to converge whenever the energy landscape looks like a "long slender valley."  Implement a second-order descent strategy to speed up convergence of your IK solver.  Note, however, that since the objective is nonconvex, naive Newton descent will <em>not</em> work (why?).  Instead, you will likely want to use a <a href="https://en.wikipedia.org/wiki/Quasi-Newton_method">quasi-Newton</a> method; one that is very popular in graphics (and quite effective in practice) is <a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS">L-BFGS</a>, which can be nicely computed using only the function values and gradients (i.e., no Hessian is needed).  Likewise, the <a href="https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm">Gauss-Newton method</a> requires only the gradient values, and is well suited to objectives that are sums of squares (like our IK "closeness" objective).</p></li>
+<li><p>Incorporate limits on the joint angles (which are often found in real systems like robots, and are also convenient for character animation).  These joint angles become simple <em>linear inequality constraints</em> in the optimization problem, and are fairly easy to handle via the <em>projected gradient</em> method.</p></li>
 <li><p>The IK algorithm you've implemented in this assignment is only one of many possible methods (closely related to the "Jacobian transpose" method)—other possibilities include <a href="http://graphics.cs.cmu.edu/nsp/course/15464-s15/www/assignments/miniProject1.htm">"Jacobian inverse" and "cyclic coordinate descent"</a>, as well as <a href="http://www.andreasaristidou.com/FABRIK.html">"Forward and Backward Reaching IK (FABRIK)"</a>.  Implement one of these methods (or any other IK method) and compare and contrast with our simple gradient descent scheme.  What are the advantages and disadvantages of each method?  Which methods are best suited to our 2D animation problem?  What new kinds of animation might you enable by incorporating different IK schemes?</p></li>
 </ul>
 
@@ -462,7 +463,82 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 <h5>
 <a id="task-3b" class="anchor" href="#task-3b" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3B:</h5>
 
-<p>Details forthcoming</p>
+<p>The integrator implemented in part 3A gives some dynamics to your pendulum, but are still incorrect in two noticeable ways:</p>
+
+<ul>
+<li>The center of mass is not properly accounted for, meaning that objects that are heavier "on one side" will not hang correctly.</li>
+<li>The pendulum does not react to the motion of the object it is attached to.
+In this task, you will modify your integrator to account for these two features.</li>
+</ul>
+
+<p>First, consider the equation of motion you implemented in 3A:</p>
+
+<p>d omega / dt = -m g L sin(theta) / I.</p>
+
+<p>Here, theta represents the angle with the vertical, but this angle is measured relative to the arbitrary starting configuration of the shapes defined in the SVG file.  Instead, we want theta to represent the angle that the <em>center of mass</em> makes with the vertical.  As before, the center of mass C can be obtained via the method <code>Joint::physicalQuantities</code>.  To adjust your equations of motion, you should:
+1. Compute the vector y from the center of rotation to the center of mass, in the initial (un-rotated) configuration.
+2. Compute the angle psi made by the vector y with the vertical.  To make sure you get the right angle, independent of what quadrant y is in, you should take a look at the <code>atan2</code> function from the standard library.  (Make sure you are calculating the angle with the vertical, and <em>not</em> the angle with the horizontal!)
+3. Subtract psi from theta in your equations of motion.</p>
+
+<p>Now, when you load a character with pendulums attached to it (like <code>clock.svg</code>) you should see a very slight motion at the beginning of the animation.</p>
+
+<p>Your final task is to adjust the equations of motion so that each pendulum reacts to the motion of objects above it in the character hierarchy.  In your quiz, you determined the equations of motion for a moving pendulum; here we will adjust those equations slightly so that the "swinging" motion accounts for the specific shape and size of the pendulum.  In particular, you will now want to integrate</p>
+
+<p>d omega / dt = -( &lt; a, y^perp &gt; / L^2 + m g L sin(theta-psi) / I ),</p>
+
+<p>where a is the acceleration of the center of rotation of the joint, and y^perp is the vector from the center of rotation to the center of mass, rotated by 90 degrees in the counter-clockwise direction.</p>
+
+<p>The only challenge here is computing the acceleration a.  This acceleration is the sum of the accelerations due to:</p>
+
+<ul>
+<li>translation of the root node, and</li>
+<li>rotation of any joint above this joint.
+The first part, translation, is easy: you just need to modify <code>Character::integrate()</code> to compute the acceleration due to translation, rather than using the zero vector.  If you implemented your spline class correctly, you should be able to call this value by making the appropriate call to <code>position::evaluate()</code>.  At this point, you should also pass the current value of <code>time</code> from <code>Character::integrate()</code> to <code>Joint::integrate()</code>, since joints further down the chain may need to know the time in order to evaluate the acceleration of a keyframed joint at the current time.</li>
+</ul>
+
+<p>Next, you will need to modify <code>Joint::integrate()</code> to <em>add</em> any acceleration due to rotation.  Notice that acceleration really is additive: for instance if a character is running <em>and</em> its arm is swinging, the total acceleration is the sum of the linear acceleration due to translation plus the <em>linear</em> acceleration due to rotation.</p>
+
+<p>So, how do you compute the linear acceleration due to rotation?  Well, let "alpha" be the spline-interpolated angle at the current time, obtained by calling <code>Spline::evaluate()</code> on the member <code>Joint::angle()</code>.  We can write the location of the center of mass at the current time as a vector</p>
+
+<p>z(t) = L * ( sin(alpha(t)), -cos(alpha(t)) ).</p>
+
+<p>The first derivative of z with respect to t is the velocity of the center of mass; the second derivative of z with respect to t is its acceleration.  You should take these derivatives yourself (i.e., by hand, before writing any more code), being sure to properly apply both the <em>chain rule</em> and the <em>product rule</em>.  Remember that you can obtain the first and second derivative of the angle alpha itself by passing the values <code>1</code> and <code>2</code> as arguments to <code>Spline::evalute()</code>.  (As a hint, your final expression should involve both the first <em>and</em> second time derivatives of the angle alpha!)</p>
+
+<p>At this point, you have an expression for the second time derivative of z <em>in the original (un-rotated) coordinate frame</em>.  To get the correct acceleration, you will need to rotate this vector by the rotation of the parent transformation <code>Joint::currentParentTransformation</code>.  The easiest way to do this is to convert your acceleration vector into homogeneous coordinates <em>setting the third homogeneous component to <strong>zero</strong> rather than one</em>.  By setting the third component to zero, you are effectively saying "apply rotations, but not translations" (since the "translation" column of the homogeneous transform matrix will have no effect on the result; if this doesn't make sense to you, try multiplying the 3x3 homogeneous transform matrix out by hand for a vector with a homogeneous coordinate of 1, and homogeneous coordinate 0).  Map the transformed coordinate back to ordinary (2D) coordinates.  (Do you need to do a homogeneous divide here?  Why or why not?)  Finally, add the transformed acceleration to the cumulative acceleration.  This updated value should be passed to the children of the current joint; in particular, it will be used by any "dynamic" joint.</p>
+
+<p>In summary, the steps you need to perform in this task are:</p>
+
+<ol>
+<li> Adjust your equations of motion to account for the center of mass.</li>
+<li> Initialize the cumulative acceleration using the acceleration of the character position in <code>Character::integrate()</code>.</li>
+<li> Derive an expression for the linear acceleration of the center of mass due to joint rotation <em>in the local coordinate frame</em>.</li>
+<li> In <code>Joint::integrate()</code>, evaluate the linear acceleration due to rotation in the local coordinate frame.</li>
+<li>Transform the acceleration computed in step (3) into the current coordinate frame using <code>Joint::currentParentTransformation</code>.</li>
+<li> Add this transformed acceleration to the cumulative acceleration.</li>
+<li> Pass the cumulative acceleration (and the current time) to all children.</li>
+</ol>
+
+<p>Note that you should add the acceleration due to rotation only if the joint is a keyframed joint; otherwise, you would be using the acceleration of a spline that is not actually used to animate the character!  In other words, you should check the joint type <code>Joint::type</code> before adding the acceleration due to keyframed rotation, making sure that its value is <code>KEYFRAMED</code>.  (In principle, of course, you should also be accumulating the acceleration due to rotation for <em>any</em> joint, including those whose dynamics are dictated by pendulum motion.  Unfortunately, the equations for a double, triple, and n-pendulum get much trickier, since they are no longer uni-directional, i.e., the motion of a joint "further down the chain" also affects the motion of joints "further up the chain."  You can attack the problem of multiple pendulums for extra credit, if you so desire.)</p>
+
+<p>Once you have finished implementing this task, the pendulums in your scene should react to character translation and rotation.  <a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/frog.mov">Click here for an example movie.</a></p>
+
+<p>Note that the physical quantities computed by <code>Joint::physicalQuantities()</code> do not necessarily correspond to any physically meaningful values (e.g., meters, kilograms, etc.)---they simply arise from the size of objects in the input SVG file.  Therefore, in order to get plausible motion, you may need to tweak various constants in your integrator (even in slightly non-physical ways).  In the reference implementation, we made the following adjustments for this task:</p>
+
+<ul>
+<li>The acceleration due to gravity is now set to g=5000.</li>
+<li>The length L is divided by 1000 before being used for anything.</li>
+<li>The acceleration due to joint rotation is scaled by 10000.
+You are free to play with these constants in order to make your animation more appealing.  Ideally, of course, you would be able to find one set of parameters that is both physically consistent and <em>also</em> leads to attractive motion.  However, even in real-world animation systems there is a lot of tweaking of constants.  Why is that?  For one thing, the objects we're animating are not physical!  (Cartoon frogs, etc.)  For another thing, getting all the physical parameters correct can be challenging.  (Though perhaps still something to strive for as you head out into the world!  I.e., can you make an animation system that is both beautiful <em>and</em> physically correct?  This point of view has certainly paid off in the world of rendering.)</li>
+</ul>
+
+<p><strong>Possible Extra Credit Extensions:</strong> </p>
+
+<ul>
+<li><p>Allow double, triple, or n-pendulums by correctly integrating their equations of motion.  Can you find a clever way to handle a system like this, without grinding out long equations by hand?</p></li>
+<li><p>Implement a new kind of joint based on a spring potential rather than a pendulum.  (How will you then draw the character?  One idea is to stretch the joints along the axis of the spring.)  Can you combine springs and pendulums?  How do you get the right equations of motion?</p></li>
+<li><p>Our final equations of motion are still not 100% physical in the sense that the acceleration term does not properly account for the shape and size of the joint (i.e., it does not use the moment of inertia, mass, etc.).  Derive the full equations of motion for a compound pendulum plus translation of the center of rotation.  (This calculation is rather involved, and will require a solid knowledge of vector calculus; in particular, Green's theorem.)  Compare animations made using the original and corrected equations of motion.  Is there a noticeable difference?</p></li>
+<li><p>Incorporate constraints on joint angles.  How should a pendulum behave if it reaches the limiting angle?  Should it "bounce" back in the opposite direction?  Perhaps you should use a <em>coefficient of restitution</em> to determine how much energy gets absorbed during the bounce.</p></li>
+</ul>
 
 <h4>
 <a id="task-4-get-creative" class="anchor" href="#task-4-get-creative" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 4: Get Creative!</h4>
