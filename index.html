@@ -252,6 +252,8 @@
 
 <p>The <code>Character</code> and <code>Joint</code> classes have some additional members that will help you to compute their motion.  For instance, each joint stores its current transformation and the current transformation of its parent; it also stores values to encode the current angle and angular velocity for dynamical simulation.  You should take a close look at the comments in the header file <code>character.h</code> to get a more detailed understanding of how these classes work.</p>
 
+<p><strong>IMPORTANT</strong> As in many computer graphics applications, the convention used for our coordinate system is that <em>the vertical axis points down, not up</em>!  In mathematics, the vertical axis typically points up.  When you were writing your rasterizer, this wasn't such a big deal: at worst, the picture shows up inverted, which you immediately realize and fix.  With dynamics, having the wrong coordinate system can cause all sorts of trouble!  Make sure you understand what coordinate systems you are working with (especially when it comes to things like rotation).  Otherwise, you can get some pretty funny behavior.</p>
+
 <h4>
 <a id="task-1-keyframe-interpolation" class="anchor" href="#task-1-keyframe-interpolation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1: Keyframe Interpolation</h4>
 
