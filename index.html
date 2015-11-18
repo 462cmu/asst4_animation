@@ -34,9 +34,9 @@
 <h3>
 <a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting started</h3>
 
-<p>We will be distributing assignments with git. You can find the repository for this assignment at <a href="http://462cmu.github.io/asst4_animator/">http://462cmu.github.io/asst4_animator/</a>. If you are unfamiliar with git, here is what you need to do to get the starter code:</p>
+<p>We will be distributing assignments with git. You can find the repository for this assignment at <a href="https://github.com/462cmu/asst4_animation/">https://github.com/462cmu/asst4_animation/</a>. If you are unfamiliar with git, here is what you need to do to get the starter code:</p>
 
-<pre><code>$ git clone https://github.com/462cmu/asst4_animator.git
+<pre><code>$ git clone https://github.com/462cmu/asst4_animation.git
 </code></pre>
 
 <p>This will create a <i> </i> <em>asst4_animator</em> folder with all the source files. </p>
@@ -222,26 +222,29 @@
 <h4>
 <a id="the-character-and-joint-classes" class="anchor" href="#the-character-and-joint-classes" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Character and Joint classes</h4>
 
-<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/JointDiagram.jpg" alt="Joint diagram"></p>
+<p></p>
+<img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/JointDiagram.jpg" alt="Joint diagram">
+
 
 <p>The main object you will be working with is a <code>Character</code>, which is a tree-like collection of <code>Joints</code> together with some additional information, such as its position as a function of time.  Each <code>Joint</code> is a node in the tree, which stores pointers to all of its children plus additional information encoding its center of rotation, and rotation angle as a function of time (relative to the parent).  Each joint also has a flag specifying whether its motion should be determined by keyframe interpolation, or by dynamics.</p>
 
-<p>When working with characters, it is very important to understand how its state (positions, rotation centers, and angles) encodes its configuration.  In particular, let x_0(t) denote the translation of the character as a function of time, encoded by the member <code>Character::position</code>.  Let c_i denote the fixed center of rotation for joint i, encoded by the member <code>Character::center</code> (note that this value is <strong>not</strong> the geometric center of the object; it is an arbitrary point that could be anywhere on the object---or even somewhere __off__the object!).  Finally, let theta_i(t) denote the angle of rotation for joint i as a function of time, encoded by either the member <code>Character::angle</code> (for keyframe interpolated joints), or <code>Character::theta</code> (for dynamic joints).  At any given time t, the rotation of joints and translation of characters will move each joint center to a new location p_i, which we will ultimately store in the member <code>Character::currentCenter</code>.  If joint j is the parent of joint i, then the current position of the root can be expressed as</p>
+<p>When working with characters, it is very important to understand how its state (positions, rotation centers, and angles) encodes its configuration.  In particular, let $x_0(t)$ denote the translation of the character as a function of time, encoded by the member <code>Character::position</code>.  Let $c_i$ denote the fixed center of rotation for joint $i$, encoded by the member <code>Character::center</code> (note that this value is <strong>not</strong> the geometric center of the object; it is an arbitrary point that could be anywhere on the object--or even somewhere <strong>off</strong> the object!).  Finally, let $\theta_i(t)$ denote the angle of rotation for joint i as a function of time, encoded by either the member <code>Character::angle</code> (for keyframe interpolated joints), or <code>Character::theta</code> (for dynamic joints).  At any given time $t$, the rotation of joints and translation of characters will move each joint center to a new location $p_i$, which we will ultimately store in the member <code>Character::currentCenter</code>.  If joint $j$ is the parent of joint $i$, then the current position of the root can be expressed as</p>
 
-<p>p_0 = c_0 + x_0(t),</p>
+<p>$$p_0 = c_0 + x_0(t)$$</p>
 
-<p>and the current position of any (non-root) node i can be expressed as</p>
+<p>and the current position of any (non-root) node $i$ can be expressed as</p>
 
-<p>p_i = p_j + R(Theta_i(t)) ( c_i - c_j ),</p>
+<p>$$p_i = p_j + R(\Theta_i(t)) ( c_i - c_j )$$</p>
 
-<p>where R(s) denotes a counter-clockwise rotation by the angle s (in radians), and Theta_i(t) denotes the cumulative rotation from the root node all the way down to joint i (at time t).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  The cumulative rotation can be written explicitly as</p>
+<p>where $R(s)$ denotes a counter-clockwise rotation by the angle $s$ (in radians), and $\Theta_i(t)$ denotes the cumulative rotation from the root node all the way down to joint $i$ (at time $t$).  In other words, to get the position of any joint, we start at the parent joint, and add the difference between the two joints' centers, rotated by all of the angles "above" the current joint.  The cumulative rotation can be written explicitly as</p>
 
-<p>Theta_i(t) = sum_k=0^{i-1} theta_k(t).</p>
+<p>$$\Theta_i(t) = \sum_{k=0}^{i-1} \theta_k(t)$$</p>
 
-<p>Consider what happens, for instance, when the root translation and all the angles are zero.  Then we have p_0 = c_0, and hence</p>
+<p>Consider what happens, for instance, when the root translation and all the angles are zero.  Then we have $p_0$ = $c_0$, and hence</p>
 
-<p>p_1 = p_0 + R(0) ( c_1 - c_0 ) = c_0 + c_1 - c_0 = c_1,
-   p_2 = p_1 + R(0) ( c_2 - c_1 ) = c_1 + c_2 - c_1 = c_2,</p>
+<p>$$p_1 = p_0 + R(0) ( c_1 - c_0 ) = c_0 + c_1 - c_0 = c_1$$</p>
+
+<p>$$p_2 = p_1 + R(0) ( c_2 - c_1 ) = c_1 + c_2 - c_1 = c_2$$</p>
 
 <p>and so forth.  In other words, we just recover the original joint centers.</p>
 
@@ -259,29 +262,29 @@
 
 <p>Recall that a <strong>cubic polynomial</strong> is a function of the form</p>
 
-<p>p(t) = at^3 + bt^2 + ct + d,</p>
+<p>$$p(t) = at^3 + bt^2 + ct + d$$</p>
 
-<p>where a, b, c, and d are fixed coefficients.  However, there are many different ways of specifying a cubic polynomial.  In particular, rather than specifying the coefficients directly, we can specify the endpoints and tangents we wish to interpolate.  This construction is called the "Hermite form" of the polynomial.  In particular, the Hermite form is given by</p>
+<p>where $a, b, c$, and $d$ are fixed coefficients.  However, there are many different ways of specifying a cubic polynomial.  In particular, rather than specifying the coefficients directly, we can specify the endpoints and tangents we wish to interpolate.  This construction is called the "Hermite form" of the polynomial.  In particular, the Hermite form is given by</p>
 
-<p>p(t) = h00(t)p0 + h10(t)m0 + h01(t)p1 + h11(t)m1,</p>
+<p>$$p(t) = h_{00}(t)p_0 + h_{10}(t)m_0 + h_{01}(t)p_1 + h_{11}(t)m_1$$</p>
 
-<p>where p0,p1 are the endpoint positions, m0,m1 are the endpoint tangents, and hij are the Hermite bases</p>
+<p>where $p_0,p_1$ are the endpoint positions, m0,m1 are the endpoint tangents, and hij are the Hermite bases</p>
 
-<p>h00(t) = 2t^3 - 3t^2 + 1</p>
+<p>$$h_{00}(t) = 2t^3 - 3t^2 + 1$$</p>
 
-<p>h10(t) = t^3 - 2t^2 + t</p>
+<p>$$h_{10}(t) = t^3 - 2t^2 + t$$</p>
 
-<p>h01(t) = -2t^3 + 3t^2</p>
+<p>$$h_{01}(t) = -2t^3 + 3t^2$$</p>
 
-<p>h11(t) = t^3 - t^2</p>
+<p>$$h_{11}(t) = t^3 - t^2$$</p>
 
-<p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline defined over the time interval [0,1] given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
+<p>Your first task is to implement the method <code>Spline::cubicSplineUnitInterval()</code>, which evaluates a spline defined over the time interval $[0,1]$ given a pair of endpoints and tangents at endpoints.  Optionally, the user can also specify that they want one of the time derivatives of the spline (1st or 2nd derivative), which will be needed for our dynamics calculations.</p>
 
 <p>Your basic strategy for implementing this routine should be:</p>
 
 <ol>
 <li><p>Evaluate the time, its square, and its cube.  (For readability, you may want to make a local copy of <code>normalizedTime</code> called simply <code>t</code>.)</p></li>
-<li><p>Using these values, as well as the position and tangent values, compute the four basis functions h00, h01, h10, and h11 of a cubic polynomial in Hermite form.  Or, if the user has requested the nth derivative, evaluate the nth derivative of each of the bases.</p></li>
+<li><p>Using these values, as well as the position and tangent values, compute the four basis functions $h_{00}, h_{01}, h_{10},$ and $h_{11}$ of a cubic polynomial in Hermite form.  Or, if the user has requested the nth derivative, evaluate the nth derivative of each of the bases.</p></li>
 <li><p>Finally, combine the endpoint and tangent data using the evaluated bases, and return the result.</p></li>
 </ol>
 
@@ -294,22 +297,25 @@
 
 <p>The basic idea behind Catmull-Rom is that for a given time t, we first find the four closest knots at times</p>
 
-<p>t0 &lt; t1 &lt;= t &lt; t2 &lt; t3.</p>
+<p>$$t_0 &lt; t_1 \leq t &lt; t_2 &lt; t_3$$</p>
 
 <p>We then use t1 and t2 as the endpoints of our cubic "piece," and for tangents we use the values</p>
 
-<p>m1 = ( p2 - p0 ) / (t2 - t0),
-   m2 = ( p3 - p1 ) / (t3 - t1).</p>
+<p>$$m_1 = ( p_2 - p_0 ) / (t_2 - t_0)$$</p>
+
+<p>$$m_2 = ( p_3 - p_1 ) / (t_3 - t_1)$$</p>
 
 <p>In other words, a reasonable guess for the tangent is given by the difference between neighboring points.  (See the Wikipedia and our course slides for more details.)</p>
 
-<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/SplineBoundary.jpg" alt="Spline boundary"></p>
+<p></p>
+<img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/SplineBoundary.jpg" alt="Spline boundary">
+
 
 <p>This scheme works great if we have two well-defined knots on either side of the query time t.  But what happens if we get a query time near the beginning or end of the spline?  Or what if the spline contains fewer than four knots?  We still have to somehow come up with a reasonable definition for the positions and tangents of the curve at these times.  For this assignment, your Catmull-Rom spline interpolation should satisfy the following properties:</p>
 
 <ul>
-<li>If there are no knots at all in the spline, interpolation should return the default value for the interpolated type.  This value can be computed by simply calling the constructor for the type: <code>T()</code>.  For instance, if the spline is interpolating <code>Vector2D</code> objects, then the default value will be (0,0).</li>
-<li>If there is only one knot in the spline, interpolation should always return the value of that knot (independent of the time).  In other words, we simply have a <em>constant</em> interpolant.  (What, therefore, should we return for the 1st and 2nd derivatives?)</li>
+<li><p>If there are no knots at all in the spline, interpolation should return the default value for the interpolated type.  This value can be computed by simply calling the constructor for the type: <code>T()</code>.  For instance, if the spline is interpolating <code>Vector2D</code> objects, then the default value will be $(0,0)$.</p></li>
+<li><p>If there is only one knot in the spline, interpolation should always return the value of that knot (independent of the time).  In other words, we simply have a <em>constant</em> interpolant.  (What, therefore, should we return for the 1st and 2nd derivatives?)</p></li>
 <li>If the query time is less than or equal to the initial knot, return the initial knot's value. (What do derivatives look like in this region?)</li>
 <li>If the query time is greater than or equal to the final knot, return the final knot's value. (What do derivatives look like in this region?)</li>
 </ul>
@@ -317,9 +323,9 @@
 <p>Once we have two or more knots, interpolation can be handled using general-purpose code; we no longer have to consider individual cases (two knots, three knots, ...).  In particular, we can adopt the following "mirroring" strategy:</p>
 
 <ul>
-<li>Any query time between the first and last knot will have at least one knot "to the left" (k1) and one "to the right" (k2).</li>
-<li>Suppose we don't have a knot "two to the left" (k0).  Then we will define a "virtual" knot k0 = k1 - (k2-k1).  In other words, we will "mirror" the difference be observe between k1 and k2 to the other side of k1.</li>
-<li>Likewise, if we don't have a knot "two to the left" of t (k3), then we will "mirror" the difference to get a "virtual" knot k3 = k2 + (k2-k1).</li>
+<li>Any query time between the first and last knot will have at least one knot "to the left" $(k_1)$ and one "to the right" $(k_2)$.</li>
+<li>Suppose we don't have a knot "two to the left" $(k_0)$.  Then we will define a "virtual" knot $k_0 = k_1 - (k_2-k_1)$.  In other words, we will "mirror" the difference be observe between $k_1$ and $k_2$ to the other side of $k_1$.</li>
+<li>Likewise, if we don't have a knot "two to the left" of $t (k_3)$, then we will "mirror" the difference to get a "virtual" knot $k_3 = k_2 + (k_2-k_1)$.</li>
 <li>At this point, we have four valid knot values (whether "real" or "virtual"), and can compute our tangents and positions as usual.</li>
 <li>These values are then handed off to our subroutine that computes cubic interpolation over the unit interval.</li>
 </ul>
@@ -333,7 +339,9 @@
 
 <p>As soon as spline animation is working, you should be able to edit and playback animations in the timeline.  The first thing you should try is translating a character along a spline path by dragging the root node of the character to different locations in the scene at different points in time (the root node is usually something like the character's torso).  (A good example is <code>pencil.svg</code>.)  If position interpolation is working properly, you should see a white curve interpolating the points of translation.  If derivative interpolation is working, you should also see blue arrows visualizing the velocity, and red arrows visualizing the acceleration.  Compare with the example below.</p>
 
-<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/CatmullRomPencil.jpg" alt="Catmull Rom curve drawn with a pencil"></p>
+<p></p>
+<img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/CatmullRomPencil.jpg" alt="Catmull Rom curve drawn with a pencil">
+
 
 <p>Now make something fun!</p>
 
@@ -348,41 +356,44 @@
 
 <p>After playing with spline interpolation a bit, you may have noticed that it takes a lot of work to manipulate characters into the desired pose, especially if they have many joints (check out <code>character.svg</code>, for instance).  In this task you will implement a basic inverse kinematics (IK) solver that optimizes joint angles in order to meet a given target.  In particular, it will try to match a selected point on the character to the current position of the cursor.</p>
 
-<p>Above, we already described how positions in our kinematic chain are determined from the current angles theta_i.  Our IK algorithm will try to adjust these angles so that our character "reaches for" the cursor.  In particular, suppose the user clicks on a point p on joint i, then moves the cursor to a point q on the screen.  We want to minimize the objective</p>
+<p>Above, we already described how positions in our kinematic chain are determined from the current angles $\theta_i$.  Our IK algorithm will try to adjust these angles so that our character "reaches for" the cursor.  In particular, suppose the user clicks on a point p on joint $i$, then moves the cursor to a point $q$ on the screen.  We want to minimize the objective</p>
 
-<p>f_0(theta) = | p(theta) - q |^2</p>
+<p>$$f_0(\theta) = | p(\theta) - q |^2$$</p>
 
 <p>with respect to the joint angles theta.  To keep things simple, we're going to adopt the following convention:</p>
 
 <p><em>The source position p is expressed with respect to the original coordinate system of the joint, i.e., before its parent character translation and joint rotations are applied.</em></p>
 
-<p>This way, p(theta) is the position of the source point after transformation by theta (and the character center).  For instance, if p were the joint center, then p(theta) would just be equal to p_i(theta), i.e., the transformed joint center.</p>
+<p>This way, $p(\theta)$ is the position of the source point after transformation by theta (and the character center).  For instance, if $p$ were the joint center, then $p(\theta)$ would just be equal to $p_i(\theta)$, i.e., the transformed joint center.</p>
 
 <h4>
 <a id="task-2a-evaluate-the-gradient" class="anchor" href="#task-2a-evaluate-the-gradient" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 2A: Evaluate the gradient</h4>
 
-<p>The question now is: what is the derivative of f_0 with respect to one of the angles theta_j?  Of course, we only have to consider angles theta_j "further up the chain" from joint i, because angles below joint i (or angles on other branches of the tree) don't affect the position of the transformed source point.  Suppose, then, that joint j is an ancestor of joint i.  Then the derivative of f_0 with respect to theta_j is given by</p>
+<p>The question now is: what is the derivative of $f_0$ with respect to one of the angles $\theta_j$?  Of course, we only have to consider angles $\theta_j$ "further up the chain" from joint $i$, because angles below joint $i$ (or angles on other branches of the tree) don't affect the position of the transformed source point.  Suppose, then, that joint $j$ is an ancestor of joint $i$.  Then the derivative of $f_0$ with respect to $\theta_j$ is given by</p>
 
-<p>&lt; q-p(theta), u/|u|^2 &gt;,</p>
+<p>$$&lt; q-p(\theta), \frac{u}{|u|^2} &gt;$$</p>
 
 <p>where &lt;.,.&gt; denotes the usual dot product and u is the vector</p>
 
-<p>R(pi/2)( p(theta) - p_j(theta) ),</p>
+<p>$$R(\pi/2)( p(\theta) - p_j(\theta) )$$</p>
 
-<p>i.e., we take the difference between the current source point and the current location of the jth joint, rotated by 90 degrees.  (These expressions may be hard to look at on GitHub; we will also provide a PDF version at a later date.)</p>
+<p>i.e., we take the difference between the current source point and the current location of the jth joint, rotated by 90 degrees. </p>
 
 <p>This formula will be evaluated in the method <code>Joint::calculateAngleGradient()</code> found in the 'character.h' file. This method takes three parameters:</p>
 
 <ul>
-<li>a pointer to the joint i that contains the source point,</li>
-<li>the current position p(theta) of the source point (i.e., the transformed click point), and</li>
-<li>the current position q of the target point (i.e., the mouse cursor).
-It should compute the gradient of f_0 with respect to joint's angle and store it in the member <code>Joint::ikAngleGradient</code>.  It should also recursively evaluate the gradient for all children, i.e., it should call <code>calculateAngleGradient()</code> for each of the "kids."  However, you should be sure <em>not</em> to set an angle gradient for any joint that doesn't affect the source point; the angle gradient for all other joints must be set to zero.  To aid in this process, you can use the boolean return value of <code>Joint::calculateAngleGradient()</code> to help determine whether the current branch is connected to the joint containing the source point.</li>
+<li>a pointer to the joint $i$ that contains the source point,</li>
+<li>the current position $p(\theta)$ of the source point (i.e., the transformed click point), and</li>
+<li>the current position $q$ of the target point (i.e., the mouse cursor).</li>
 </ul>
+
+<p>It should compute the gradient of $f_0$ with respect to joint's angle and store it in the member <code>Joint::ikAngleGradient</code>.  It should also recursively evaluate the gradient for all children, i.e., it should call <code>calculateAngleGradient()</code> for each of the "kids."  However, you should be sure <em>not</em> to set an angle gradient for any joint that doesn't affect the source point; the angle gradient for all other joints must be set to zero.  To aid in this process, you can use the boolean return value of <code>Joint::calculateAngleGradient()</code> to help determine whether the current branch is connected to the joint containing the source point.</p>
 
 <p>Once you have implemented this method, you will be able to see a visualization of the angle gradients by right-clicking and dragging on a joint.  For instance, if you load up the example file <code>scenes/testscene/telescope.svg</code>, your implementation should match the gradients visualized below; here the red dot is the initial click point, and the blue dot is the position of the cursor.  However, the configuration of the character should not change (yet).  </p>
 
-<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/IKGradientTelescope.jpg" alt="IK angle gradients on the telescope"></p>
+<p></p>
+<img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/IKGradientTelescope.jpg" alt="IK angle gradients on the telescope">
+
 
 <h4>
 <a id="task-2b-ski-downhill" class="anchor" href="#task-2b-ski-downhill" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 2B: Ski downhill</h4>
@@ -404,9 +415,11 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 <li>Finally, it needs to advance the joint angles via gradient descent.  This can be done by iterating over all joints and adding a little bit of the angle derivative to the current angle (forward Euler).</li>
 </ul>
 
-<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of tau = 0.1, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
+<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of $\tau = 0.1$, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
 
-<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/TelescopeBent.jpg" alt="Telescope under the infuence of IK"></p>
+<p></p>
+<img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/TelescopeBent.jpg" alt="Telescope under the infuence of IK">
+
 
 <p><strong>Possible Extra Credit Extensions:</strong> </p>
 
@@ -425,17 +438,19 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 <h5>
 <a id="task-3a-a-basic-swinging-pendulum" class="anchor" href="#task-3a-a-basic-swinging-pendulum" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3A: A basic swinging pendulum</h5>
 
-<p><img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockNoDamping.jpg" alt="Animator"></p>
+<p></p>
+<img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockNoDamping.jpg" alt="Animator">
+
 
 <p>To get us started, we will implement a basic swinging pendulum that does <em>not</em> respond to the acceleration of the character it is attached to.  To do so, we simply need to implement the equations of motion for a <em>compound pendulum</em> (i.e., a pendulum consisting of a single rigid body rotating around some axis):</p>
 
-<p>d^2 theta/dt^2 = -m g L sin(theta) / I.</p>
+<p>$$d^2 \theta/dt^2 = -m \cdot g \cdot L \cdot sin(\theta) / I$$</p>
 
 <p>Here theta is the angle with the vertical, m is the mass, g is the acceleration due to gravity, L is distance between the axis of rotation and the center of mass, and I is the moment of inertia.  As we also discussed in class, this second-order (in time) ODE can be split into a system of two first-order ODEs:</p>
 
-<p>d theta / dt = omega</p>
+<p>$$d \theta / dt = \omega$$</p>
 
-<p>d omega / dt = -m g L sin(theta) / I.</p>
+<p>$$d \omega / dt = -m \cdot g \cdot L \cdot sin(\theta) / I$$</p>
 
 <p>It is these equations you will integrate numerically.  In our code framework, the angle theta is stored as the member <code>Joint::theta</code>, and the angular velocity omega is stored as the member <code>Joint::omega</code>.  You will need to implement the method <code>Joint::integrate()</code>, which takes three parameters:</p>
 
@@ -447,18 +462,17 @@ It should compute the gradient of f_0 with respect to joint's angle and store it
 
 <p>For this task you should only need the second parameter (i.e., the time step).  In particular, you should integrate the equations of motion using the <a href="https://en.wikipedia.org/wiki/Semi-implicit_Euler_method#The_method">symplectic Euler method</a>, which yields good energy behavior (no blowup or damping) and does not require the use of temporary variables.</p>
 
-<p>The physical attributes m, L, and I of the pendulum can be computed using the method <code>Joint::physicalQuantities()</code>, which will return the mass, moment of inertia, and center of mass (these properties are computed from the shape of the joint as described by the SVG file; you can take a look at the file <code>svg.cpp</code> if you're interested in how they're computed).  The length L is the distance between the joint center c and the center of mass C, i.e.,</p>
+<p>The physical attributes $m, L,$ and $I$ of the pendulum can be computed using the method <code>Joint::physicalQuantities()</code>, which will return the mass, moment of inertia, and center of mass (these properties are computed from the shape of the joint as described by the SVG file; you can take a look at the file <code>svg.cpp</code> if you're interested in how they're computed).  The length $L$ is the distance between the joint center $c$ and the center of mass $C$, i.e.,</p>
 
-<pre><code>L = | C - c |.
-</code></pre>
+<p>$$L = | C - c |$$</p>
 
-<p>When computing this quantity, you should be careful to use the un-transformed joint center <code>Joint::center</code> rather than the transformed center <code>Joint::currentCenter</code>, since the center of mass C is also expressed in pre-transformed coordinates.  For the gravitational acceleration g you can use any constant that gives reasonable animation; the scales of objects in our SVG files (being cartoons) do not relate to any typical physical scale.  The reference implementation uses the value g = 3.</p>
+<p>When computing this quantity, you should be careful to use the un-transformed joint center <code>Joint::center</code> rather than the transformed center <code>Joint::currentCenter</code>, since the center of mass $C$ is also expressed in pre-transformed coordinates.  For the gravitational acceleration $g$ you can use any constant that gives reasonable animation; the scales of objects in our SVG files (being cartoons) do not relate to any typical physical scale.  The reference implementation uses the value $g = 3$.</p>
 
 <p>The only remaining thing you have to do to get your dynamics working is to call your integration routine starting at the root of the character.  This can be done by implementing the method <code>Character::integrate()</code>, which should call <code>integrate()</code> on the member <code>root</code>.  Note that <code>Joint::integrate()</code> asks for three parameters: the current time, the integration time step, and the body acceleration.  For the time being you can just pass in a zero vector for the acceleration; this vector will be worked out in Task 3B.</p>
 
 <p>Once everything has been implemented, try animating the pendulum in <code>clock.svg</code>.  It should swing back and forth indefinitely, without ever blowing up or dying down.  <a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockNoDamping.mov">Click here for an example movie.</a></p>
 
-<p>In the real world, objects do eventually stop moving due to friction and other dissipative forces.  The nice thing about starting with an integrator that preserves energy is that it gives us precise control over exactly how much energy is lost each time step.  In particular, suppose we take a time step of size tau.  Then we can damp our angular velcoity omega by simply multiplying it by exp( -a tau ), where a is a positive constant; in the reference implementation we just use a=1.  (By the way, why is this the damping factor?  Well, if the instantaneous damping factor were a, then the ODE describing the damping would be the simple linear equation du/dt = -au, whose solution is u(t) = exp( -at ) u(0).)  After damping, your clock pendulum should gradually slow down; <a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockDamped.mov">click here for an example movie.</a></p>
+<p>In the real world, objects do eventually stop moving due to friction and other dissipative forces.  The nice thing about starting with an integrator that preserves energy is that it gives us precise control over exactly how much energy is lost each time step.  In particular, suppose we take a time step of size $\tau$.  Then we can damp our angular velocity $omega$ by simply multiplying it by $exp( -a \tau )$, where a is a positive constant; in the reference implementation we just use $a=1$.  (By the way, why is this the damping factor?  Well, if the instantaneous damping factor were $a$, then the ODE describing the damping would be the simple linear equation $du/dt = -au$, whose solution is $u(t) = exp( -at ) u(0)$.)  After damping, your clock pendulum should gradually slow down; <a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/ClockDamped.mov">click here for an example movie.</a></p>
 
 <h5>
 <a id="task-3b" class="anchor" href="#task-3b" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 3B:</h5>
@@ -473,38 +487,42 @@ In this task, you will modify your integrator to account for these two features.
 
 <p>First, consider the equation of motion you implemented in 3A:</p>
 
-<p>d omega / dt = -m g L sin(theta) / I.</p>
+<p>$$d \omega / dt = -m \cdot g \cdot L \cdot sin(\theta) / I$$</p>
 
-<p>Here, theta represents the angle with the vertical, but this angle is measured relative to the arbitrary starting configuration of the shapes defined in the SVG file.  Instead, we want theta to represent the angle that the <em>center of mass</em> makes with the vertical.  As before, the center of mass C can be obtained via the method <code>Joint::physicalQuantities</code>.  To adjust your equations of motion, you should:
-1. Compute the vector y from the center of rotation to the center of mass, in the initial (un-rotated) configuration.
-2. Compute the angle psi made by the vector y with the vertical.  To make sure you get the right angle, independent of what quadrant y is in, you should take a look at the <code>atan2</code> function from the standard library.  (Make sure you are calculating the angle with the vertical, and <em>not</em> the angle with the horizontal!)
-3. Subtract psi from theta in your equations of motion.</p>
+<p>Here, theta represents the angle with the vertical, but this angle is measured relative to the arbitrary starting configuration of the shapes defined in the SVG file.  Instead, we want theta to represent the angle that the <em>center of mass</em> makes with the vertical.  As before, the center of mass C can be obtained via the method <code>Joint::physicalQuantities</code>.  To adjust your equations of motion, you should:</p>
+
+<ol>
+<li>Compute the vector y from the center of rotation to the center of mass, in the initial (un-rotated) configuration.</li>
+<li>Compute the angle psi made by the vector y with the vertical.  To make sure you get the right angle, independent of what quadrant y is in, you should take a look at the <code>atan2</code> function from the standard library.  (Make sure you are calculating the angle with the vertical, and <em>not</em> the angle with the horizontal!)</li>
+<li>Subtract psi from theta in your equations of motion.</li>
+</ol>
 
 <p>Now, when you load a character with pendulums attached to it (like <code>clock.svg</code>) you should see a very slight motion at the beginning of the animation.</p>
 
 <p>Your final task is to adjust the equations of motion so that each pendulum reacts to the motion of objects above it in the character hierarchy.  In your quiz, you determined the equations of motion for a moving pendulum; here we will adjust those equations slightly so that the "swinging" motion accounts for the specific shape and size of the pendulum.  In particular, you will now want to integrate</p>
 
-<p>d omega / dt = -( &lt; a, y^perp &gt; / L^2 + m g L sin(theta-psi) / I ),</p>
+<p>$$d \omega / dt = -( &lt; a, y^{perp} &gt; / L^2 + m \cdot g \cdot L \cdot sin(\theta-\psi) / I )$$</p>
 
-<p>where a is the acceleration of the center of rotation of the joint, and y^perp is the vector from the center of rotation to the center of mass, rotated by 90 degrees in the counter-clockwise direction.</p>
+<p>where $a$ is the acceleration of the center of rotation of the joint, and $y^{perp}$ is the vector from the center of rotation to the center of mass, rotated by 90 degrees in the counter-clockwise direction.</p>
 
 <p>The only challenge here is computing the acceleration a.  This acceleration is the sum of the accelerations due to:</p>
 
 <ul>
 <li>translation of the root node, and</li>
-<li>rotation of any joint above this joint.
-The first part, translation, is easy: you just need to modify <code>Character::integrate()</code> to compute the acceleration due to translation, rather than using the zero vector.  If you implemented your spline class correctly, you should be able to call this value by making the appropriate call to <code>position::evaluate()</code>.  At this point, you should also pass the current value of <code>time</code> from <code>Character::integrate()</code> to <code>Joint::integrate()</code>, since joints further down the chain may need to know the time in order to evaluate the acceleration of a keyframed joint at the current time.</li>
+<li>rotation of any joint above this joint.</li>
 </ul>
+
+<p>The first part, translation, is easy: you just need to modify <code>Character::integrate()</code> to compute the acceleration due to translation, rather than using the zero vector.  If you implemented your spline class correctly, you should be able to call this value by making the appropriate call to <code>position::evaluate()</code>.  At this point, you should also pass the current value of <code>time</code> from <code>Character::integrate()</code> to <code>Joint::integrate()</code>, since joints further down the chain may need to know the time in order to evaluate the acceleration of a keyframed joint at the current time.</p>
 
 <p>Next, you will need to modify <code>Joint::integrate()</code> to <em>add</em> any acceleration due to rotation.  Notice that acceleration really is additive: for instance if a character is running <em>and</em> its arm is swinging, the total acceleration is the sum of the linear acceleration due to translation plus the <em>linear</em> acceleration due to rotation.</p>
 
-<p>So, how do you compute the linear acceleration due to rotation?  Well, let "alpha" be the spline-interpolated angle at the current time, obtained by calling <code>Spline::evaluate()</code> on the member <code>Joint::angle()</code>.  We can write the location of the center of mass at the current time as a vector</p>
+<p>So, how do you compute the linear acceleration due to rotation?  Well, let $\alpha$ be the spline-interpolated angle at the current time, obtained by calling <code>Spline::evaluate()</code> on the member <code>Joint::angle()</code>.  We can write the location of the center of mass at the current time as a vector</p>
 
-<p>z(t) = L * ( sin(alpha(t)), -cos(alpha(t)) ).</p>
+<p>$$z(t) = L * ( sin(\alpha(t)), -cos(\alpha(t)) )$$</p>
 
-<p>The first derivative of z with respect to t is the velocity of the center of mass; the second derivative of z with respect to t is its acceleration.  You should take these derivatives yourself (i.e., by hand, before writing any more code), being sure to properly apply both the <em>chain rule</em> and the <em>product rule</em>.  Remember that you can obtain the first and second derivative of the angle alpha itself by passing the values <code>1</code> and <code>2</code> as arguments to <code>Spline::evalute()</code>.  (As a hint, your final expression should involve both the first <em>and</em> second time derivatives of the angle alpha!)</p>
+<p>The first derivative of $z$ with respect to $t$ is the velocity of the center of mass; the second derivative of $z$ with respect to t is its acceleration.  You should take these derivatives yourself (i.e., by hand, before writing any more code), being sure to properly apply both the <em>chain rule</em> and the <em>product rule</em>.  Remember that you can obtain the first and second derivative of the angle alpha itself by passing the values <code>1</code> and <code>2</code> as arguments to <code>Spline::evalute()</code>.  (As a hint, your final expression should involve both the first <em>and</em> second time derivatives of the angle alpha!)</p>
 
-<p>At this point, you have an expression for the second time derivative of z <em>in the original (un-rotated) coordinate frame</em>.  To get the correct acceleration, you will need to rotate this vector by the rotation of the parent transformation <code>Joint::currentParentTransformation</code>.  The easiest way to do this is to convert your acceleration vector into homogeneous coordinates <em>setting the third homogeneous component to <strong>zero</strong> rather than one</em>.  By setting the third component to zero, you are effectively saying "apply rotations, but not translations" (since the "translation" column of the homogeneous transform matrix will have no effect on the result; if this doesn't make sense to you, try multiplying the 3x3 homogeneous transform matrix out by hand for a vector with a homogeneous coordinate of 1, and homogeneous coordinate 0).  Map the transformed coordinate back to ordinary (2D) coordinates.  (Do you need to do a homogeneous divide here?  Why or why not?)  Finally, add the transformed acceleration to the cumulative acceleration.  This updated value should be passed to the children of the current joint; in particular, it will be used by any "dynamic" joint.</p>
+<p>At this point, you have an expression for the second time derivative of $z$ <strong>in the original (un-rotated) coordinate frame</strong>.  To get the correct acceleration, you will need to rotate this vector by the rotation of the parent transformation <code>Joint::currentParentTransformation</code>.  The easiest way to do this is to convert your acceleration vector into homogeneous coordinates <strong>setting the third homogeneous component to <em>zero</em> rather than one</strong>.  By setting the third component to zero, you are effectively saying "apply rotations, but not translations" (since the "translation" column of the homogeneous transform matrix will have no effect on the result; if this doesn't make sense to you, try multiplying the 3x3 homogeneous transform matrix out by hand for a vector with a homogeneous coordinate of 1, and homogeneous coordinate 0).  Map the transformed coordinate back to ordinary (2D) coordinates.  (Do you need to do a homogeneous divide here?  Why or why not?)  Finally, add the transformed acceleration to the cumulative acceleration.  This updated value should be passed to the children of the current joint; in particular, it will be used by any "dynamic" joint.</p>
 
 <p>In summary, the steps you need to perform in this task are:</p>
 
@@ -525,11 +543,12 @@ The first part, translation, is easy: you just need to modify <code>Character::i
 <p>Note that the physical quantities computed by <code>Joint::physicalQuantities()</code> do not necessarily correspond to any physically meaningful values (e.g., meters, kilograms, etc.)---they simply arise from the size of objects in the input SVG file.  Therefore, in order to get plausible motion, you may need to tweak various constants in your integrator (even in slightly non-physical ways).  In the reference implementation, we made the following adjustments for this task:</p>
 
 <ul>
-<li>The acceleration due to gravity is now set to g=5000.</li>
-<li>The length L is divided by 1000 before being used for anything.</li>
-<li>The acceleration due to joint rotation is scaled by 10000.
-You are free to play with these constants in order to make your animation more appealing.  Ideally, of course, you would be able to find one set of parameters that is both physically consistent and <em>also</em> leads to attractive motion.  However, even in real-world animation systems there is a lot of tweaking of constants.  Why is that?  For one thing, the objects we're animating are not physical!  (Cartoon frogs, etc.)  For another thing, getting all the physical parameters correct can be challenging.  (Though perhaps still something to strive for as you head out into the world!  I.e., can you make an animation system that is both beautiful <em>and</em> physically correct?  This point of view has certainly paid off in the world of rendering.)</li>
+<li>The acceleration due to gravity is now set to $g=5000$.</li>
+<li>The length $L$ is divided by 1000 before being used for anything.</li>
+<li>The acceleration due to joint rotation is scaled by $10000$.</li>
 </ul>
+
+<p>You are free to play with these constants in order to make your animation more appealing.  Ideally, of course, you would be able to find one set of parameters that is both physically consistent and <em>also</em> leads to attractive motion.  However, even in real-world animation systems there is a lot of tweaking of constants.  Why is that?  For one thing, the objects we're animating are not physical!  (Cartoon frogs, etc.)  For another thing, getting all the physical parameters correct can be challenging.  (Though perhaps still something to strive for as you head out into the world!  I.e., can you make an animation system that is both beautiful <em>and</em> physically correct?  This point of view has certainly paid off in the world of rendering.)</p>
 
 <p><strong>Possible Extra Credit Extensions:</strong> </p>
 
@@ -613,9 +632,9 @@ You are free to play with these constants in order to make your animation more a
 <p>Specially-constructed SVG files are used to define used to describe a kinematic chain that is a hierarchical representation of a character.  The <em>grouping</em> and <em>layering</em> of objects is used to determine the hierarchy and dynamic behavior of the character.  In particular:</p>
 
 <ul>
-<li>A <strong>shape</strong> is an elementary SVG shape; currently-supported shapes include: circle, ellipse, rectangle, line segment, polyline, and polygon.</li>
-<li>Each <strong>joint</strong> consists of a single group of <strong>shapes</strong>, where the last shape in the group <em>must</em> be a circle.  This list must be "flat," i.e., it cannot be a group of groups.  The circle specifies the center of rotation for the joint (its radius is ignored).  The fill color of the joint determines its motion type: black for keyframed joints, white for dynamic joints.</li>
-<li>A <strong>character</strong> is a collection of hierarchically grouped <strong>joints</strong>.  The grouping determines a dependency tree among <strong>joints</strong>; in particular, in any group of <strong>joints</strong> the first <strong>joint</strong> is the parent, and all remaining <strong>joints</strong> are children.  All <strong>joints</strong> in a file must ultimately be grouped into a single <strong>character</strong>; there is no support for multiple characters in a single file.</li>
+<li><p>A <strong>shape</strong> is an elementary SVG shape; currently-supported shapes include: circle, ellipse, rectangle, line segment, polyline, and polygon.</p></li>
+<li><p>Each <strong>joint</strong> consists of a single group of <strong>shapes</strong>, where the last shape in the group <em>must</em> be a circle.  This list must be "flat," i.e., it cannot be a group of groups.  The circle specifies the center of rotation for the joint (its radius is ignored).  The fill color of the joint determines its motion type: black for keyframed joints, white for dynamic joints.</p></li>
+<li><p>A <strong>character</strong> is a collection of hierarchically grouped <strong>joints</strong>.  The grouping determines a dependency tree among <strong>joints</strong>; in particular, in any group of <strong>joints</strong> the first <strong>joint</strong> is the parent, and all remaining <strong>joints</strong> are children.  All <strong>joints</strong> in a file must ultimately be grouped into a single <strong>character</strong>; there is no support for multiple characters in a single file.</p></li>
 </ul>
 
 <p><em>Example</em>: Suppose we want to create a character consisting of a shoulder A, an arm B, a hand C, and three fingers x, y, and z.  Each of A, B, C, x, y, and z must be <strong>joints</strong>, i.e., they must each be a <em>flat</em> list of shapes, including a circle at the very end specifying the center of rotation.  For instance, one of the fingers might look like a = (ellipse,ellipse,ellipse,circle), consisting of three finger joints and an axis of rotation.  In this case, the three finger joints would be fixed relative to each other; only the whole finger would be able to rotate.  To construct the <strong>character</strong>, we would then construct the group (x,y,z,C), which attaches the five fingers to the hand C.  We would then put this group into a group ((x,y,z,C),B) attaching the hand to the arm, and finally (((x,y,z,C),B),A) attaching the arm to the shoulder.  Here is the corresponding SVG code; note that comments (beginning with !--) are ignored:</p>
