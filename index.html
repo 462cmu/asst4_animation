@@ -385,7 +385,7 @@
 
 <p>The question now is: what is the derivative of $f_0$ with respect to one of the angles $\theta_j$?  Of course, we only have to consider angles $\theta_j$ "further up the chain" from joint $i$, because angles below joint $i$ (or angles on other branches of the tree) don't affect the position of the transformed source point.  Suppose, then, that joint $j$ is an ancestor of joint $i$.  Then the derivative of $f_0$ with respect to $\theta_j$ is given by</p>
 
-<p>$$&lt; q-p(\theta), \frac{u}{|u|^2} &gt;$$</p>
+<p>$$&lt; q-p(\theta), u &gt;$$</p>
 
 <p>where &lt;.,.&gt; denotes the usual dot product and u is the vector</p>
 
@@ -431,7 +431,7 @@
 <li>Finally, it needs to advance the joint angles via gradient descent.  This can be done by iterating over all joints and adding a little bit of the angle derivative to the current angle (forward Euler).</li>
 </ul>
 
-<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of $\tau = 0.1$, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
+<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of $\tau = 0.000001$, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
 
 <p></p>
 <img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/TelescopeBent.jpg" alt="Telescope under the infuence of IK">
