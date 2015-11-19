@@ -32,6 +32,18 @@
 <p>In this project you will build on your previous work with 2D rasterization to implement an application that allows you to manipulate and animate jointed cartoon characters.  When you are done, you will have a tool that allows you to produce animations that use three of the major techniques used in production computer animation: keyframing, numerical optimization, and physically-based simulation.  (You can create your own SVG characters in free software like <a href="http://https://inkscape.org/en/">Inkscape</a>, or commercial software like <a href="http://www.adobe.com/Illustrator/">Adobe Illustrator</a>; more details are given below about exactly how to construct one of these characters.)</p>
 
 <h3>
+<a id="supplementary-notes" class="anchor" href="#supplementary-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Supplementary Notes</h3>
+
+<p>In addition to the writeup on this webpage, you may find the following supplementary material useful in implementing and/or understanding this assignment:</p>
+
+<ul>
+<li>
+<a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/TranslatingPendulum.pdf">Equations of Motion for a Translating Compound Pendulum</a> - this note shows how we derived the equations of motion used by your integrator below, and also provides a solution to Quiz 19.</li>
+<li>
+<a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/CatmullRomReparameterization.pdf">Reparameterizing a Catmull-Rom Spline</a> - this note shows how to adjust derivative data when using an existing cubic polynomial interpolant on the unit interval [0,1] to implement Catmull-Rom interpolation.</li>
+</ul>
+
+<h3>
 <a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting started</h3>
 
 <p>We will be distributing assignments with git. You can find the repository for this assignment at <a href="https://github.com/462cmu/asst4_animation/">https://github.com/462cmu/asst4_animation/</a>. If you are unfamiliar with git, here is what you need to do to get the starter code:</p>
@@ -390,6 +402,8 @@
 </ul>
 
 <p>It should compute the gradient of $f_0$ with respect to joint's angle and store it in the member <code>Joint::ikAngleGradient</code>.  It should also recursively evaluate the gradient for all children, i.e., it should call <code>calculateAngleGradient()</code> for each of the "kids."  However, you should be sure <em>not</em> to set an angle gradient for any joint that doesn't affect the source point; the angle gradient for all other joints must be set to zero.  To aid in this process, you can use the boolean return value of <code>Joint::calculateAngleGradient()</code> to help determine whether the current branch is connected to the joint containing the source point.</p>
+
+<p>One thing to think about is: <em>do you want the root joint to rotate?</em>  For instance, if we are trying to manipulate the hand of a character, should the entire body rotate to meet the goal?  In practice, this can lead to some annoying/counter-intuitive behavior, and in practice we might like the character to remaining "sitting upright."  Therefore, in the reference implementation (and the examples below) <strong>we set the IK gradient for the root node to zero</strong>.  At least for the purposes of debugging your implementation, you should also set <code>Joint::ikAngleGradient</code> to zero for the root node, which you can easily do (for instance) in the method <code>Character::reachForTarget()</code>, which has explicit knowledge of the root node via the member <code>Character::root</code>.</p>
 
 <p>Once you have implemented this method, you will be able to see a visualization of the angle gradients by right-clicking and dragging on a joint.  For instance, if you load up the example file <code>scenes/testscene/telescope.svg</code>, your implementation should match the gradients visualized below; here the red dot is the initial click point, and the blue dot is the position of the cursor.  However, the configuration of the character should not change (yet).  </p>
 
