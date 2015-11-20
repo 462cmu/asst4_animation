@@ -32,20 +32,6 @@
 <p>In this project you will build on your previous work with 2D rasterization to implement an application that allows you to manipulate and animate jointed cartoon characters.  When you are done, you will have a tool that allows you to produce animations that use three of the major techniques used in production computer animation: keyframing, numerical optimization, and physically-based simulation.  (You can create your own SVG characters in free software like <a href="http://https://inkscape.org/en/">Inkscape</a>, or commercial software like <a href="http://www.adobe.com/Illustrator/">Adobe Illustrator</a>; more details are given below about exactly how to construct one of these characters.)</p>
 
 <h3>
-<a id="supplementary-notes" class="anchor" href="#supplementary-notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Supplementary Notes</h3>
-
-<p>In addition to the writeup on this webpage, you may find the following supplementary material useful in implementing and/or understanding this assignment:</p>
-
-<ul>
-<li>
-<a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/CatmullRomReparameterization.pdf">Reparameterizing a Catmull-Rom Spline</a> - this note shows how to adjust derivative data when using an existing cubic polynomial interpolant on the unit interval [0,1] to implement Catmull-Rom interpolation.</li>
-<li>
-<a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/IKDerivation.pdf">Derivation of our simple Inverse Kinematics (IK) Algorithm</a> - this note shows how we came up with our simple inverse kinematics scheme, namely: (i) what is our description of a character, (ii) what is the energy we want to minimize, (iii) and how do we take its gradient?</li>
-<li>
-<a href="http://15462.courses.cs.cmu.edu/fall2015content/misc/TranslatingPendulum.pdf">Equations of Motion for a Translating Compound Pendulum</a> - this note shows how we derived the equations of motion used by your integrator below, and also provides a solution to Quiz 19.</li>
-</ul>
-
-<h3>
 <a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting started</h3>
 
 <p>We will be distributing assignments with git. You can find the repository for this assignment at <a href="https://github.com/462cmu/asst4_animation/">https://github.com/462cmu/asst4_animation/</a>. If you are unfamiliar with git, here is what you need to do to get the starter code:</p>
@@ -266,8 +252,6 @@
 
 <p>The <code>Character</code> and <code>Joint</code> classes have some additional members that will help you to compute their motion.  For instance, each joint stores its current transformation and the current transformation of its parent; it also stores values to encode the current angle and angular velocity for dynamical simulation.  You should take a close look at the comments in the header file <code>character.h</code> to get a more detailed understanding of how these classes work.</p>
 
-<p><strong>IMPORTANT</strong> As in many computer graphics applications, the convention used for our coordinate system is that <em>the vertical axis points down, not up</em>!  In mathematics, the vertical axis typically points up.  When you were writing your rasterizer, this wasn't such a big deal: at worst, the picture shows up inverted, which you immediately realize and fix.  With dynamics, having the wrong coordinate system can cause all sorts of trouble!  Make sure you understand what coordinate systems you are working with (especially when it comes to things like rotation).  Otherwise, you can get some pretty funny behavior.</p>
-
 <h4>
 <a id="task-1-keyframe-interpolation" class="anchor" href="#task-1-keyframe-interpolation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Task 1: Keyframe Interpolation</h4>
 
@@ -387,7 +371,7 @@
 
 <p>The question now is: what is the derivative of $f_0$ with respect to one of the angles $\theta_j$?  Of course, we only have to consider angles $\theta_j$ "further up the chain" from joint $i$, because angles below joint $i$ (or angles on other branches of the tree) don't affect the position of the transformed source point.  Suppose, then, that joint $j$ is an ancestor of joint $i$.  Then the derivative of $f_0$ with respect to $\theta_j$ is given by</p>
 
-<p>$$&lt; q-p(\theta), u &gt;$$</p>
+<p>$$&lt; q-p(\theta), \frac{u}{|u|^2} &gt;$$</p>
 
 <p>where &lt;.,.&gt; denotes the usual dot product and u is the vector</p>
 
@@ -405,9 +389,9 @@
 
 <p>It should compute the gradient of $f_0$ with respect to joint's angle and store it in the member <code>Joint::ikAngleGradient</code>.  It should also recursively evaluate the gradient for all children, i.e., it should call <code>calculateAngleGradient()</code> for each of the "kids."  However, you should be sure <em>not</em> to set an angle gradient for any joint that doesn't affect the source point; the angle gradient for all other joints must be set to zero.  To aid in this process, you can use the boolean return value of <code>Joint::calculateAngleGradient()</code> to help determine whether the current branch is connected to the joint containing the source point.</p>
 
-<p>One thing to think about is: <em>do you want the root joint to rotate?</em>  For instance, if we are trying to manipulate the hand of a character, should the entire body rotate to meet the goal?  In practice, this can lead to some annoying/counter-intuitive behavior, and in practice we might like the character to remaining "sitting upright."  Therefore, in the reference implementation (and the examples below) <strong>we set the IK gradient for the root node to zero</strong>.  At least for the purposes of debugging your implementation, you should also set <code>Joint::ikAngleGradient</code> to zero for the root node, which you can easily do (for instance) in the method <code>Character::reachForTarget()</code>, which has explicit knowledge of the root node via the member <code>Character::root</code>.</p>
+<p>Once you have implemented this method, you will be able to see a visualization of the angle gradients by right-clicking and dragging on a joint. For instance, if you load up the example file <code>scenes/testscene/telescope.svg</code>, your implementation should match the gradients visualized below; here the red dot is the initial click point, and the blue dot is the position of the cursor.  However, the configuration of the character should not change (yet). <strong>IMPORTANT</strong> Please note that you will first need to call the <code>Joint::calculateAngleGradient()</code> method in the <code>Character::reachForTarget()</code> method in your code before any visual outputs will be present.</p>
 
-<p>Once you have implemented this method, you will be able to see a visualization of the angle gradients by right-clicking and dragging on a joint.  For instance, if you load up the example file <code>scenes/testscene/telescope.svg</code>, your implementation should match the gradients visualized below; here the red dot is the initial click point, and the blue dot is the position of the cursor.  However, the configuration of the character should not change (yet). <strong>IMPORTANT</strong> To match the picture below, you should make sure to set <code>gradientLengthScale</code> to <code>0.1</code> in the method <code>Animator::drawIKDebugWidgets()</code>, which can be found in <code>animator.cpp</code>.</p>
+<p>Once you have implemented this method, you will be able to see a visualization of the angle gradients by right-clicking and dragging on a joint.  For instance, if you load up the example file <code>scenes/testscene/telescope.svg</code>, your implementation should match the gradients visualized below; here the red dot is the initial click point, and the blue dot is the position of the cursor.  However, the configuration of the character should not change (yet). <strong>IMPORTANT</strong> To match the picture below, you should make sure to set <code>gradientLengthScale</code> to $0.1$ in the method <code>Animator::drawIKDebugWidgets()</code>, which can be found in <code>animator.cpp</code>.</p>
 
 <p></p>
 <img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/IKGradientTelescope.jpg" alt="IK angle gradients on the telescope">
@@ -433,7 +417,7 @@
 <li>Finally, it needs to advance the joint angles via gradient descent.  This can be done by iterating over all joints and adding a little bit of the angle derivative to the current angle (forward Euler).</li>
 </ul>
 
-<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of $\tau = 0.000001$, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
+<p>How do you pick the size of the time step?  For this assignment, we will just use a "very small" time step (the reference implementation uses a time step of $\tau = 0.1$, but feel free to experiment).  Also, to get snappier feedback, you can take multiple gradient descent steps per call to <code>Character::reachForTarget()</code> (we used 10... but please experiment so you get a sense of how this all works!).  When things are working properly, the telescope should bend as in the picture below.  (Now try generating some animation, using your new IK tool to accelerate the process!)</p>
 
 <p></p>
 <img src="http://15462.courses.cs.cmu.edu/fall2015content/misc/asst4_images/TelescopeBent.jpg" alt="Telescope under the infuence of IK">
