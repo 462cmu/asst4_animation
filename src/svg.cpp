@@ -346,34 +346,99 @@ void SVGParser::parseElement(XMLElement *xml, SVGElement *element) {
 
   Style *style = &element->style;
 
-  // parse style string
+  const char *s = xml->Attribute("style");
+  if (s) { // parse style string
 
-  // parse individual properties
-  const char *fill = xml->Attribute("fill");
-  if (fill)
-    style->fillColor = Color::fromHex(fill);
+    // creat a map of individual attribute strings
+    string astr = string(s);
+    map<string,string> attributes;
+    size_t posl = 0;
+    while (posl != string::npos) {
+      size_t posr = astr.find_first_of(";", posl + 1);
+      if (posr) {
+        string attribute = astr.substr(posl, posr - posl);
+        size_t pos = attribute.find_first_of(":");
+        string key = attribute.substr(0, pos);
+        string val = attribute.substr(pos + 1);
+        attributes[key] = val;
+        posl = posr == string::npos ? posr : posr + 1;
+      } else {
+        string attribute = astr.substr(posl);
+        size_t pos = attribute.find_first_of(":");
+        string key = attribute.substr(0, pos);
+        string val = attribute.substr(pos + 1);
+        attributes[key] = val;
+        break;
+      }
 
-  const char *opacity = xml->Attribute("opacity");
-  if (opacity)
-    style->fillColor.a = atof(opacity);
+      // parse from map
+      auto nope = attributes.end();
 
-  const char *fill_opacity = xml->Attribute("fill-opacity");
-  if (fill_opacity)
-    style->fillColor.a = atof(fill_opacity);
+      auto fill = attributes.find("fill");
+      if (fill != nope) {
+        style->fillColor = Color::fromHex(fill->second.c_str());
+      }
 
-  const char *stroke = xml->Attribute("stroke");
-  const char *stroke_opacity = xml->Attribute("stroke-opacity");
-  if (stroke) {
-    style->strokeColor = Color::fromHex(stroke);
-    if (stroke_opacity)
-      style->strokeColor.a = atof(stroke_opacity);
-  } else {
-    style->strokeColor = Color::Black;
-    style->strokeColor.a = 0;
+      auto opacity = attributes.find("opacity");
+      if (opacity != nope) {
+        style->fillColor.a = atof(opacity->second.c_str());
+      }
+
+      auto fill_opacity = attributes.find("fill-opacity");
+      if (fill_opacity != nope) {
+        style->fillColor.a = atof(fill_opacity->second.c_str());
+      }
+
+      auto stroke = attributes.find("stroke");
+      auto stroke_opacity = attributes.find("stroke-opacity");
+      if (stroke != nope) {
+        style->strokeColor = Color::fromHex(stroke->second.c_str());
+        if (stroke_opacity != nope) {
+          style->strokeColor.a = atof(stroke_opacity->second.c_str());
+        }
+      } else {
+        style->strokeColor = Color::Black;
+        style->strokeColor.a = 0;
+      }
+
+      auto stroke_width = attributes.find("stroke-width");
+      if (stroke_width != nope) {
+        style->strokeWidth = atof(stroke_width->second.c_str());
+      }
+
+      auto stroke_miterlimit = attributes.find("stroke-miterlimit");
+      if (stroke_miterlimit != nope) {
+        style->miterLimit = atof(stroke_miterlimit->second.c_str());
+      }
+    }
+
+  } else { // parse individual properties
+    const char *fill = xml->Attribute("fill");
+    if (fill)
+      style->fillColor = Color::fromHex(fill);
+
+    const char *opacity = xml->Attribute("opacity");
+    if (opacity)
+      style->fillColor.a = atof(opacity);
+
+    const char *fill_opacity = xml->Attribute("fill-opacity");
+    if (fill_opacity)
+      style->fillColor.a = atof(fill_opacity);
+
+    const char *stroke = xml->Attribute("stroke");
+    const char *stroke_opacity = xml->Attribute("stroke-opacity");
+    if (stroke) {
+      style->strokeColor = Color::fromHex(stroke);
+      if (stroke_opacity)
+        style->strokeColor.a = atof(stroke_opacity);
+    } else {
+      style->strokeColor = Color::Black;
+      style->strokeColor.a = 0;
+    }
+
+    xml->QueryFloatAttribute("stroke-width", &style->strokeWidth);
+    xml->QueryFloatAttribute("stroke-miterlimit", &style->miterLimit);
   }
-
-  xml->QueryFloatAttribute("stroke-width", &style->strokeWidth);
-  xml->QueryFloatAttribute("stroke-miterlimit", &style->miterLimit);
 
   // parse transformation
   const char *trans = xml->Attribute("transform");
