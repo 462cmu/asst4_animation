@@ -37,8 +37,7 @@ typedef enum e_SVGElementType {
   ELLIPSE,
   CIRCLE,
   IMAGE,
-  GROUP,
-  PATH
+  GROUP
 } SVGElementType;
 
 struct Style {
@@ -97,22 +96,6 @@ struct Group : SVGElement, SVG_Container {
   virtual SVGElement* copy( void ) const
   {
      return new Group( *this );
-  }
-  
-  virtual double mass( void ) const;
-  virtual double momentOfInertia( const Vector2D& center ) const;
-  virtual Vector2D centroid( void ) const;
-};
-
-struct Path : SVGElement {
-
-  Path() : SVGElement ( PATH ) { }
-
-  // FIXME : Add Path specification here.
-
-  virtual SVGElement* copy( void ) const
-  {
-     return new Path( *this );
   }
 
   virtual double mass( void ) const;
@@ -277,7 +260,10 @@ class SVGParser {
   static void parseEllipse   ( XMLElement* xml, Ellipse*  ellipse     );
   static void parseCircle    ( XMLElement* xml, Circle*   circle      );
   static void parseImage     ( XMLElement* xml, Image*    image       );
-  static void parsePath      ( XMLElement* xml, Path *    path        );
+
+  // parse a path-encoded shape
+  static void parsePath ( XMLElement* xml, SVG_Container* svg );
+
   // Note: Groups are parsed using parseSVG_Container.
 
 }; // class SVGParser
